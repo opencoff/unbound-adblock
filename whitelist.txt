@@ -1,0 +1,112 @@
+dataxu.com
+#dataxu.net
+#emarketer.com
+
+# some google search ads are actually useful for me.
+googleadservices.com
+clickserve.dartsearch.net
+
+# these are needed to show images in certain emails
+feedsportal.com
+inscname.net
+insnw.net
+lever.co
+
+# Apple -- we want commented out entries to be blacklisted!
+#advertising.apple.com
+c.apple.com
+iadsdk.apple.com
+autolinkmaker.itunes.apple.com
+metrics.apple.com
+qwapi.apple.com
+securemetrics.apple.com
+
+#facebook.com
+urbanairship.com
+
+# Amazon gift cards
+fls-eu.amazon.com
+fls-na.amazon.com
+
+# seeed studio uses hs-sites.com!
+hs-sites.com
+hubspot.net
+
+# MSFT - Uses all kinds of domains for doing simple
+# app-store stuff.
+#edgesuite.net
+akadns.net
+akadns.org
+akamaiedge.net
+akamaized.net
+s.gateway.messenger.live.com
+m.hotmail.com
+microsoft.com.edgesuite.net
+
+# NB: we want the commented out entries to be blacklisted!
+#advertising.microsoft.com
+#analytics.microsoft.com
+#bingads.microsoft.com
+c.microsoft.com
+c1.microsoft.com
+choice.microsoft.com
+settings-sandbox.data.microsoft.com
+settings-win.data.microsoft.com
+vortex.data.microsoft.com
+vortex-sandbox.data.microsoft.com
+vortex-win.data.microsoft.com
+amer.hops.glbdns.microsoft.com
+corpext.msitadfs.glbdns2.microsoft.com
+dmd.metaservices.microsoft.com
+redir.metaservices.microsoft.com
+feedback.search.microsoft.com
+apprep.smartscreen.microsoft.com
+i1.services.social.microsoft.com
+#spynet2.microsoft.com
+#spynetalt.microsoft.com
+#spynettest.microsoft.com
+corp.sts.microsoft.com
+diagnostics.support.microsoft.com
+services.wes.df.telemetry.microsoft.com
+telemetry.microsoft.com
+wes.df.telemetry.microsoft.com
+oca.telemetry.microsoft.com
+telecommand.telemetry.microsoft.com
+#watson.telemetry.microsoft.com
+telemetry.urs.microsoft.com
+#watson.microsoft.com
+#survey.watson.microsoft.com
+logging.windows.microsoft.com
+statsfe1.ws.microsoft.com
+statsfe2.ws.microsoft.com
+
+# skype
+cloudapp.net
+skype.com
+trafficmanager.net
+
+# Why is this in a global blacklist?
+groupon.com
+
+
+# apple use edgekey?
+edgekey.net
+
+# And, iTunes purchases don't work if this akamai+symantec
+# frankzilla is not accessible!
+symcd.com
+
+# These seem to be used in email links
+list-manage.com
+list-manage1.com
+list-manage2.com
+campaign-archive1.com
+mailchimp.com
+
+# Why is aetna in the global blackllist
+aetna.com
+
+# Other domains that ought not be blacklisted
+ajax.googleapis.com
+fonts.googleapis.com
+connectivitycheck.gstatic.com
