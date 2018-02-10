@@ -2,6 +2,10 @@ dataxu.com
 #dataxu.net
 #emarketer.com
 
+
+linuxjournal.cmail20.com
+cmail20.com
+
 # some google search ads are actually useful for me.
 googleadservices.com
 clickserve.dartsearch.net
