@@ -25,6 +25,9 @@ metrics.apple.com
 qwapi.apple.com
 securemetrics.apple.com
 
+# epsilon is used by Hilton!
+epsilon.com
+
 #facebook.com
 urbanairship.com
 
