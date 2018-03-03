@@ -2,6 +2,8 @@ dataxu.com
 #dataxu.net
 #emarketer.com
 
+# mandrill used by people for email verification
+mandrillapp.com
 
 linuxjournal.cmail20.com
 cmail20.com
