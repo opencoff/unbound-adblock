@@ -119,3 +119,8 @@ aetna.com
 ajax.googleapis.com
 fonts.googleapis.com
 connectivitycheck.gstatic.com
+
+# cmail.com -- used for email re-direct and content download. fuck.
+cmail17.com
+cmail18.com
+cmail19.com
