@@ -1,6 +1,9 @@
-dataxu.com
+#dataxu.com
 #dataxu.net
 #emarketer.com
+
+# A bunch of people use qualtrics. Why?
+qualtrics.com
 
 # mandrill used by people for email verification
 mandrillapp.com
