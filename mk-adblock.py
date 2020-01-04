@@ -62,29 +62,29 @@ def die(fmt, *args):
 
 def main():
     global __doc__
-    parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("-w", "--whitelist", dest='wl', action="store",
+    pp = argparse.ArgumentParser(description=__doc__)
+    pp.add_argument("-w", "--whitelist", dest='wl', action="store",
                       default="", metavar="F",
                       help="Whitelist domains in file 'F' [%(default)s]")
-    parser.add_argument("-p", "--output-prefix", dest='prefix', action="store",
+    pp.add_argument("-p", "--output-prefix", dest='prefix', action="store",
                       default="bad", metavar="S",
                       help="Use 'S' as the output file prefix [%(default)s]")
-    parser.add_argument("-f", "--flush-cache", dest="flush", action="store_true",
+    pp.add_argument("-f", "--flush-cache", dest="flush", action="store_true",
                       default=False,
                       help="Flush the cache before download [%(default)s]")
-    parser.add_argument("-s", "--summary", dest="summary", action="store_true",
+    pp.add_argument("-s", "--summary", dest="summary", action="store_true",
                       default=False,
                       help="Print domain summary in the end[%(default)s]")
-    parser.add_argument("-u", "--unbound", dest="unbound", action="store", 
+    pp.add_argument("-u", "--unbound", dest="unbound", action="store",
                         default="", metavar='F',
                         help="Generate an unbound.conf fragment and write to file 'F' [%(default)s]")
 
-    parser.add_argument("files", nargs="*", help="[FILE..]", default=[])
-    parser.add_argument("-L", "--list", dest="feed", action="store",
+    pp.add_argument("files", nargs="*", help="[FILE..]", default=[])
+    pp.add_argument("-L", "--list", dest="feed", action="store",
                 default="", metavar='F',
                 help="Read list of feeds from file 'F' [%(default)s]")
 
-    args = parser.parse_args()
+    args = pp.parse_args()
     wl   = scanwhitelist(args.wl)
     db   = blacklistDB(wl)
 
@@ -102,6 +102,8 @@ def main():
         db.nuke(g)
 
     db.finalize()
+
+    sys.stderr.write("\r     Finalizing lists ..                                                            \r")
     h = db.hosts()   # includes hosts
     d = db.domains() # only domains
     w = db.whitelisted()
@@ -196,27 +198,38 @@ class blacklistDB:
         sys.stderr.write("     Generating final list ..\r")
         sys.stderr.flush()
 
-        def prune(d):
+        const_fmt = '%(progress)s%% [%(fill)s%(blank)s] %(cur)d/%(end)d'
+
+        def prune(d, msg):
             z = {}
+            pfmt = "%s %s" % (msg, const_fmt)
+            pp = ProgressBar(width=48, fill='o', blank='.',
+                    end=len(d), format= pfmt)
             for n in d.keys():
-                progress()
+                pp.update(1)
                 if not self.in_whitelist(n):
                     z[n] = True
 
+            pp.complete(erase=True)
             return z
 
-        bld = prune(self.doms)
-        tmp = prune(self.h)
+        tmp = prune(self.h, "bad hosts ")
+        bld = prune(self.doms, "bad domains ")
         blh = {}
 
         # now, remove entries that already have a top-level
         # blacklist in bld
+        pfmt = "Finishing .. %s" % (const_fmt)
+        pp = ProgressBar(width=48, fill='o', blank='.',
+                end=len(tmp), format= pfmt)
         for n in tmp.keys():
+            pp.update(1)
             for p in domparts(n):
                 if p in bld: break
             else:
                 blh[n] = True
 
+        pp.complete(erase=True)
         self.bld = bld
         self.blh = blh
 
@@ -378,7 +391,7 @@ class blacklistDB:
 
 class urldata:
     """cache for URL content. Minimizes network I/O to once every
-    hour."""
+    day."""
 
 
     def __init__(self, url, typ, flush=False):
@@ -461,7 +474,7 @@ def is_ip(a):
     for f in fam:
         try:
             a = socket.inet_pton(f, a)
-            return True 
+            return True
         except:
             pass
 
@@ -573,6 +586,155 @@ def writelist(l, fn):
     """Write list 'l' to file 'fd' separated by \n"""
 
     writefile(fn, '\n'.join(l))
+
+class ProgressBar(object):
+    """ProgressBar class holds the options of the progress bar.
+    The options are:
+        start   State from which start the progress. For example, if start is
+                5 and the end is 10, the progress of this state is 50%
+        end     State in which the progress has terminated.
+        width   --
+        format  Format of the progress bar (formatted string)
+        fill    String to use for "filled" used to represent the progress
+        blank   String to use for "filled" used to represent remaining space.
+
+    The following dict is available for use in the format string of
+    the progress bar:
+        fill:  String to use for filled portion of the progress
+        blank: String to use for remaining portion of the progress
+        cur:   Current position of the progress [integer]
+        end:   Ending position of the progress [integer]
+        cur_human, end_human: current, end position in human units of size
+        progress: Percentage of completion (string)
+        speed:    in appropriate human units
+
+    Note: start <= cur <= end
+
+    The default format is:
+
+        '[%(fill)s%(blank)s] %(progress)s%%'
+
+
+    Typical usage:
+
+        p = ProgressBar(end=SOME_LARGE_NUMBER)
+        while some_condition():
+            p.update(n)
+
+    """
+
+    # ANSI/TTY Escape codes:
+    #   ESC[1A ==> Move cursor up _one_ line
+    #   ESC[2K ==> clear current line
+    CLR0 = "%c[%dA%c[2K" % (0x1B, 1, 0x1B)
+    CLR  = "%c[2K\r" % (0x1B)
+
+    def __init__(self, start=0, end=1, width=12, fill='=',
+                 blank='.', stdout=sys.stdout,
+                 format='[%(fill)s%(blank)s] %(progress)s%%'):
+        super(ProgressBar, self).__init__()
+
+        self.start  = start
+        self.end    = end
+        self.width  = width
+        self.fill   = fill
+        self.blank  = blank
+        self.format = format
+        self.cur    = 0
+        self.step   = 100 / float(width)
+        self.start  = datetime.now()
+
+        self.stdout = stdout
+        self.last_indicator = ''
+        self.firstline = True
+
+        if hasattr(self.stdout, 'isatty') and self.stdout.isatty():
+            self.tty = True
+        else:
+            self.tty = False
+
+    def update(self, incr, end=0):
+
+        if end > 0: self.end = end
+
+        if self.cur == self.end: return
+
+        now = datetime.now()
+        d = now - self.start
+        self.cur += incr
+
+        progress = 100.0 * float(self.cur) / float(self.end)
+        if progress > 100:
+            progress = 100
+
+        spd        = human(float(self.cur) / d.total_seconds()) + "/s"
+        progressed = int(progress / self.step)
+        fill       = progressed * self.fill
+        blank      = (self.width - progressed) * self.blank
+        d          = { 'fill':      fill,
+                       'blank':     blank,
+                       'cur':       self.cur,
+                       'end':       self.end,
+                       'cur_human': human(self.cur),
+                       'end_human': human(self.end),
+                       'speed':     spd,
+                       'progress':  int(progress)
+                     }
+
+
+        indicator = self.format % d
+        if indicator != self.last_indicator:
+            self.flush(indicator)
+            self.last_indicator = indicator
+
+    def flush(self, line):
+        if not self.tty: return
+
+        if self.firstline:
+            self.firstline = False
+        else:
+            self.stdout.write(self.CLR)
+
+        self.stdout.write(line)
+        self.stdout.flush()
+
+    def reset(self, end=10):
+        """Resets the current progress to the start point"""
+        self.end = end
+        self.cur = 0
+        self.start = datetime.now()
+        return self
+
+    def complete(self, newln=False, erase=False):
+        if erase: self.stdout.write(self.CLR)
+        if newln: self.stdout.write('\n')
+
+
+KB = 1024L
+MB = 1024L * KB
+GB = 1024L * MB
+TB = 1024L * GB
+PB = 1024L * TB
+
+Divisors = [
+    ('PB', PB),
+    ('TB', TB),
+    ('GB', GB),
+    ('MB', MB),
+    ('kB', KB),
+    ]
+
+
+def human(n):
+    """Return human readable size for n bytes"""
+    global Divisors
+    for d in Divisors:
+        sz = d[1]
+        if n > sz:
+            s = "%4.2f %s" % (float(n) / sz, d[0])
+            return s
+
+    return "%lu B" % n
 
 
 Unbound_template = """# Unbound config for active malware or ad domain hosts
