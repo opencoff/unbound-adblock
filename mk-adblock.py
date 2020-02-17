@@ -12,15 +12,16 @@
 import os, sys, stat, time
 from os.path import basename, exists
 from datetime import datetime
-from md5 import md5
+from hashlib import md5
+#from importlib import reload
 import json, socket
 import argparse
 import re, requests
 
 # Gah! Some pages use utf8 unicode encoding and requests need to be
-# told. THis is a gross hack. But works for now!
-reload(sys)
-sys.setdefaultencoding('utf8')
+# told. This is a gross hack. But works for now!
+#reload(sys)
+#sys.setdefaultencoding('utf8')
 
 # We reuse the cache if it is less than a day old
 CACHEAGE = 86400
@@ -125,7 +126,7 @@ def main():
         writefile(args.unbound, Unbound_template % fmt)
 
     if args.summary:
-        print "blacklist: %d hosts, %d domains; whitelist: %d hosts" % (len(h), len(d), len(w))
+        print("blacklist: %d hosts, %d domains; whitelist: %d hosts" % (len(h), len(d), len(w)))
 
 
 def xstat(nm):
@@ -150,6 +151,7 @@ def isolder_than(st, age):
 
 def url2fname(url, typ):
     """Convert a URL to a name in a deterministic manner."""
+    url = url.encode('utf-8')
     x = md5(url)
     y = x.hexdigest()
     return ".%s.%s" % (y, typ)
@@ -160,19 +162,19 @@ def xrm(fn):
 
 def make_empty(fn):
     """Create an empty file"""
-    fd = open(fn, 'wb')
+    fd = open(fn, 'w')
     fd.close()
 
 def urlcache(uhash, url):
     """Fetch and store a local cache of 'url'"""
     tmpf  = uhash + '.tmp'
-    fd    = open(tmpf, 'wb')
+    fd    = open(tmpf, 'w')
     try:
         r = requests.get(url, timeout=2.0)
         fd.write(r.text)
         fd.close()
         os.rename(tmpf, uhash)
-    except Exception, ex:
+    except Exception as ex:
         warn("can't fetch '%s': %s", url, str(ex))
         fd.close()
         xrm(tmpf)
@@ -253,7 +255,7 @@ class blacklistDB:
         """
         #k = self.blh.keys() + self.bld.keys()
         k = self.blh.keys()
-        k.sort(cmp=domain_cmp)
+        return sorted(k, key=cmp_to_key(domain_cmp))
 
         #d = self.bld.keys()
         #d.sort(cmp=domain_cmp)
@@ -267,13 +269,12 @@ class blacklistDB:
         #
         #  - For now, we will only blacklist top-level _domains_ and
         #    individual hosts.
-        return k
+        #return k
 
     def domains(self):
         """Return blacklisted domains"""
         k = self.bld.keys()
-        k.sort(cmp=domain_cmp)
-        return k
+        return sorted(k, key=cmp_to_key(domain_cmp))
 
     def whitelisted(self):
         """Return list of whitelisted domains."""
@@ -281,8 +282,7 @@ class blacklistDB:
         # we only pick whitelisted top-level domains. Individual
         # hosts are not needed.
         k = self.wlh.keys()
-        k.sort(cmp=domain_cmp)
-        return k
+        return sorted(k, key=cmp_to_key(domain_cmp))
 
     def addwhitelist(self, wlh):
         """Add hosts in wlh to our whitelist db"""
@@ -387,7 +387,26 @@ class blacklistDB:
         if e in self.h:
             del self.h[e]
 
+def cmp_to_key(mycmp):
+    '''Convert a cmp= function into a key= function.
 
+    The things py3 makes us do. Gah!'''
+    class K:
+        def __init__(self, obj, *args):
+            self.obj = obj
+        def __lt__(self, other):
+            return mycmp(self.obj, other.obj) < 0
+        def __gt__(self, other):
+            return mycmp(self.obj, other.obj) > 0
+        def __eq__(self, other):
+            return mycmp(self.obj, other.obj) == 0
+        def __le__(self, other):
+            return mycmp(self.obj, other.obj) <= 0
+        def __ge__(self, other):
+            return mycmp(self.obj, other.obj) >= 0
+        def __ne__(self, other):
+            return mycmp(self.obj, other.obj) != 0
+    return K
 
 class urldata:
     """cache for URL content. Minimizes network I/O to once every
@@ -404,7 +423,7 @@ class urldata:
 
         st = xstat(self.uhash)
         if flush or isolder_than(st, CACHEAGE):
-            #print str(st)
+            #print(str(st))
             self.suff = ' +fetch'
             urlcache(self.uhash, url)
         else:
@@ -487,7 +506,7 @@ def argv2fd(argv):
         return
 
     for fn in argv:
-        fd = open(fn, 'rb')
+        fd = open(fn, 'r')
         yield fd, fn, fn
         fd.close()
 
@@ -508,9 +527,10 @@ def scanwhitelist(fn):
     if len(fn) == 0:
         return {}
 
-    fd = open(fn, 'rb')
+    fd = open(fn, 'r')
     wl = {}
     for line in fd:
+        #line = line.decode('utf-8')
         line = line.strip().lower()
         if len(line) == 0 or line.startswith('#'):
             continue
@@ -525,9 +545,10 @@ def scanwhitelist(fn):
 
 def readfeed(fname):
     """Read a feed and build a dict"""
-    fd = open(fname, 'rb')
+    fd = open(fname, 'r')
     d  = []
     for l in fd:
+        #l = l.decode('utf-8')
         l = l.strip()
         if len(l) == 0 or l.startswith('#'): continue
         v = l.split()
@@ -574,8 +595,8 @@ def domain_cmp(a,b):
 def writefile(fn, s):
     """Write string 's' to file 'fn'"""
     try:
-        fd = open(fn, 'wb')
-    except Exception, ex:
+        fd = open(fn, 'w')
+    except Exception as ex:
         die("Can't create file '%s': %s", fn, str(ex))
 
     fd.write(s)
@@ -710,11 +731,11 @@ class ProgressBar(object):
         if newln: self.stdout.write('\n')
 
 
-KB = 1024L
-MB = 1024L * KB
-GB = 1024L * MB
-TB = 1024L * GB
-PB = 1024L * TB
+KB = 1024
+MB = 1024 * KB
+GB = 1024 * MB
+TB = 1024 * GB
+PB = 1024 * TB
 
 Divisors = [
     ('PB', PB),
