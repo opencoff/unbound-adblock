@@ -10,11 +10,11 @@ json https://raw.githubusercontent.com/disconnectme/chrollusion/master/chrollusi
 # This is from pi-hole
 txt https://raw.githubusercontent.com/StevenBlack/hosts/master/hosts
 txt http://sysctl.org/cameleon/hosts
-txt https://zeustracker.abuse.ch/blocklist.php?download=domainblocklist
+#txt https://zeustracker.abuse.ch/blocklist.php?download=domainblocklist
 txt https://s3.amazonaws.com/lists.disconnect.me/simple_tracking.txt
 txt https://s3.amazonaws.com/lists.disconnect.me/simple_ad.txt
 txt http://hosts-file.net/ad_servers.txt
-txt https://raw.githubusercontent.com/quidsup/notrack/master/trackers.txt
+#txt https://raw.githubusercontent.com/quidsup/notrack/master/trackers.txt
 
 # Untested list from pi-hole
 #easy https://raw.githubusercontent.com/reek/anti-adblock-killer/master/anti-adblock-killer-filters.txt

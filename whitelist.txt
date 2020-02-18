@@ -11,6 +11,11 @@ mandrillapp.com
 linuxjournal.cmail20.com
 cmail20.com
 
+einthusan.com
+einthusan.tv
+einthusan.ca
+einthusan.in
+
 # some google search ads are actually useful for me.
 googleadservices.com
 clickserve.dartsearch.net
