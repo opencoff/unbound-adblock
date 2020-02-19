@@ -5,11 +5,12 @@
 package main
 
 import (
+	"bufio"
 	"fmt"
+	"io"
 	"os"
 	"path"
 	"runtime"
-	"bufio"
 	"strings"
 
 	"github.com/opencoff/unbound-adblock/internal/blacklist"
@@ -19,7 +20,6 @@ import (
 
 var Z string = path.Base(os.Args[0])
 var Verbose bool
-
 
 func Progress(s string, v ...interface{}) {
 	if !Verbose {
@@ -34,7 +34,6 @@ func Progress(s string, v ...interface{}) {
 	os.Stderr.Sync()
 }
 
-
 func init() {
 	runtime.GOMAXPROCS(runtime.NumCPU())
 }
@@ -45,11 +44,13 @@ func main() {
 	var feed string
 	var format string
 	var wl StringList
+	var outfile string
 
 	flag.BoolVarP(&Verbose, "verbose", "v", false, "Show verbose output")
 	flag.StringVarP(&feed, "feed", "F", "", "Read blacklists from feed file `F`")
 	flag.VarP(&wl, "whitelist", "W", "Add whistlist entries from file `F`")
 	flag.StringVarP(&format, "output-format", "f", "", "Set output format to `T` (text or unbound)")
+	flag.StringVarP(&outfile, "output-file", "o", "", "Write output to file `F`")
 
 	flag.Usage = func() {
 		fmt.Printf(`Usage: %s [options] [blacklist ...]
@@ -75,6 +76,31 @@ Options:
 	}
 
 	flag.Parse()
+
+	var output func(b *blacklist.BL, fd io.WriteCloser)
+	var outfd io.WriteCloser = os.Stdout
+
+	switch format {
+	case "", "text", "txt":
+		output = textOut
+
+	case "unbound":
+		output = unboundOut
+
+	default:
+		die("Unknown output format %s", format)
+	}
+
+	if len(outfile) > 0 {
+		fd, err := os.OpenFile(outfile, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0600)
+		if err != nil {
+			die("can't create %s: %s", outfile, err)
+		}
+
+		defer fd.Close()
+		outfd = fd
+	}
+
 	args := flag.Args()
 
 	bb := blacklist.NewBuilder(Progress)
@@ -108,9 +134,20 @@ Options:
 		die("%v", err)
 	}
 
-	bl.Dump(os.Stdout)
+	output(bl, outfd)
 }
 
+func textOut(b *blacklist.BL, fd io.WriteCloser) {
+	fmt.Fprintf(fd, `# %d domains, %d hosts
+# -- Domains --
+%s
+# -- Hosts --
+%s
+`, len(b.Domains), len(b.Hosts), strings.Join(b.Domains, "\n"), strings.Join(b.Hosts, "\n"))
+}
+
+func unboundOut(b *blacklist.BL, fd io.WriteCloser) {
+}
 
 func addfeed(bb *blacklist.Builder, feed string) error {
 	fd, err := os.Open(feed)

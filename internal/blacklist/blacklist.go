@@ -33,14 +33,16 @@ type Builder struct {
 
 	verbose func(s string, v ...interface{})
 
+	final bool
+
 	errs []error
 }
 
 // Make a new blacklist DB
 func NewBuilder(prog func(s string, v ...interface{})) *Builder {
 	d := &Builder{
-		b: newDB(),
-		w: newDB(),
+		b:       newDB(),
+		w:       newDB(),
 		verbose: prog,
 	}
 
@@ -73,34 +75,64 @@ func (d *Builder) Finalize() (*BL, []error) {
 	d.b.syncWait()
 	d.w.syncWait()
 
-	d.progress("Finalizing ..")
-
 	d.Lock()
 	defer d.Unlock()
 	if len(d.errs) > 0 {
 		return nil, d.errs
 	}
 
-	// Remove items that are in the whitelist
-	dom := d.w.prune(d.b.domains)
-	hosts := d.w.prune(d.b.hosts)
+	var dom *sync.Map = d.b.domains
+	var hosts *sync.Map = d.b.hosts
 
-	// remove entries in hosts that already have a top level domain in 'dom'
-	hosts.Range(func (k, v interface{}) bool {
-		h := k.(string)
-		t := domTree(h)
-		for _, p := range t {
-			if _, ok := dom.Load(p); ok {
-				hosts.Delete(k)
-				return true
+	if !d.final {
+		d.progress("Finalizing ..")
+
+		// Remove items that are in the whitelist
+		dom = d.w.prune(d.b.domains)
+		hosts = d.w.prune(d.b.hosts)
+
+		// remove entries in hosts that already have a top level domain in 'dom'
+		hosts.Range(func(k, v interface{}) bool {
+			h := k.(string)
+			t := domTree(h)
+			for _, p := range t {
+				if _, ok := dom.Load(p); ok {
+					hosts.Delete(k)
+					return true
+				}
 			}
-		}
-		return true
-	})
+			return true
+		})
+		d.final = true
+	}
 
+	gather := func(a []string, m *sync.Map) []string {
+		m.Range(func(k, v interface{}) bool {
+			a = append(a, k.(string))
+			return true
+		})
+
+		return domSort(a)
+	}
+
+	var wg sync.WaitGroup
+
+	dl := make([]string, 0, 16384)
+	hl := make([]string, 0, 32768)
+
+	wg.Add(1)
+	go func() {
+		hl = gather(hl, hosts)
+		wg.Done()
+	}()
+
+	dl = gather(dl, dom)
+	wg.Wait()
+
+	d.progress("%d domains, %d hosts\n", len(dl), len(hl))
 	db := &BL{
-		hosts:   hosts,
-		domains: dom,
+		Hosts:   hl,
+		Domains: dl,
 	}
 	return db, nil
 }
@@ -115,57 +147,8 @@ func (d *Builder) progress(s string, v ...interface{}) {
 
 // Fast lookup table
 type BL struct {
-	domains *sync.Map
-	hosts   *sync.Map
-}
-
-// XXX golang says concurrent reads from a map are safe.
-// Return true if 'nm' is blacklisted
-func (b *BL) IsBlacklisted(nm string) bool {
-
-	t := domTree(nm)
-
-	return matchSuffix(b.domains, t) || matchSuffix(b.hosts, t)
-}
-
-func matchSuffix(m *sync.Map, t []string) bool {
-	for _, p := range t {
-		if _, ok := m.Load(p); ok {
-			return true
-		}
-	}
-	return false
-}
-
-
-// Write DB to file 'fd' and close
-func (b *BL) Dump(w io.Writer) {
-
-	gather := func(a []string, m *sync.Map) []string {
-		m.Range(func(k, v interface{}) bool {
-			a = append(a, k.(string))
-			return true
-		})
-
-		return domSort(a)
-	}
-
-	var wg sync.WaitGroup
-
-	dl := make([]string, 0, 1024)
-	hl := make([]string, 0, 1024)
-
-	wg.Add(1)
-	go func() {
-		hl = gather(hl, b.hosts)
-		wg.Done()
-	}()
-
-	dl = gather(dl, b.domains)
-	wg.Wait()
-
-	fmt.Fprintf(w, "# %d domains, %d hosts\n# -- domains --\n%s\n# -- hosts --\n%s\n",
-		len(dl), len(hl), strings.Join(dl, "\n"), strings.Join(hl, "\n"))
+	Domains []string
+	Hosts   []string
 }
 
 // -- methods on 'db' --
@@ -239,10 +222,19 @@ func (d *db) syncWait() {
 	d.wg.Wait()
 }
 
+func matchSuffix(m *sync.Map, t []string) bool {
+	for _, p := range t {
+		if _, ok := m.Load(p); ok {
+			return true
+		}
+	}
+	return false
+}
+
 // Prune items in 'm' that belong to this list
 func (d *db) prune(m *sync.Map) *sync.Map {
 	x := new(sync.Map)
-	m.Range(func (k, v interface{}) bool {
+	m.Range(func(k, v interface{}) bool {
 		s := k.(string)
 		if !d.match(s) {
 			x.Store(s, true)
@@ -258,7 +250,6 @@ func (d *db) match(nm string) bool {
 	t := domTree(nm)
 	return matchSuffix(d.domains, t) || matchSuffix(d.hosts, t)
 }
-
 
 // Convert a domain name into an array of names - each successively shorter by
 // one sub-component. e.g., given 'www.aaa.bbb.ccc.com', this function
@@ -318,7 +309,7 @@ func domTree(s string) []string {
 	if n <= 1 {
 		return []string{s}
 	}
-	
+
 	// we reverse so the TLD is at the top
 	v = reverse(v)
 	return v[1:]
