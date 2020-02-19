@@ -1,0 +1,4 @@
+github.com/opencoff/go-options v0.0.0-20180228224628-a2104ec56acd h1:uiVnAMvMtSLYZe4hL+0Nl0vPjVHpvFOZvxHhzxRmO8o=
+github.com/opencoff/go-options v0.0.0-20180228224628-a2104ec56acd/go.mod h1:nwz+Rg8A30bvhi2KWU3oBuwe87p4YaT8hAX1afaTBag=
+github.com/opencoff/pflag v0.5.0 h1:kK3cSTlGj0fHby/PoFzHkf+Jx3PdiACJwzYDWEWlEKQ=
+github.com/opencoff/pflag v0.5.0/go.mod h1:mTLzGGUGda1Av3d34iAJlh0JIlRxmFZtmc6qoWPspK0=

@@ -31,14 +31,17 @@ type Builder struct {
 	b *db // blacklist
 	w *db // whitelist
 
+	verbose func(s string, v ...interface{})
+
 	errs []error
 }
 
 // Make a new blacklist DB
-func NewBuilder() *Builder {
+func NewBuilder(prog func(s string, v ...interface{})) *Builder {
 	d := &Builder{
 		b: newDB(),
 		w: newDB(),
+		verbose: prog,
 	}
 
 	return d
@@ -70,6 +73,8 @@ func (d *Builder) Finalize() (*BL, []error) {
 	d.b.syncWait()
 	d.w.syncWait()
 
+	d.progress("Finalizing ..")
+
 	d.Lock()
 	defer d.Unlock()
 	if len(d.errs) > 0 {
@@ -98,6 +103,12 @@ func (d *Builder) Finalize() (*BL, []error) {
 		domains: dom,
 	}
 	return db, nil
+}
+
+func (d *Builder) progress(s string, v ...interface{}) {
+	if d.verbose != nil {
+		d.verbose(s, v...)
+	}
 }
 
 // -- methods on 'BL' --

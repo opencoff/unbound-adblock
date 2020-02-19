@@ -55,11 +55,14 @@ func (d *Builder) fetchURL(u string, ch chan string, isJson bool) {
 
 	defer resp.Body.Close()
 
+	var n int
 	if isJson {
-		_ = jsonIO(resp.Body, ch, nil)
+		n = jsonIO(resp.Body, ch, nil)
 	} else {
-		_ = textIO(resp.Body, ch, nil)
+		n = textIO(resp.Body, ch, nil)
 	}
+
+	d.progress("%32.32s: %d entries", u, n)
 }
 
 func isIP4(s string) bool {

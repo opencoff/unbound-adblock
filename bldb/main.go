@@ -77,7 +77,7 @@ Options:
 	flag.Parse()
 	args := flag.Args()
 
-	bb := blacklist.NewBuilder()
+	bb := blacklist.NewBuilder(Progress)
 	if len(wl.V) > 0 {
 		for _, f := range wl.V {
 			err := bb.AddWhitelist(f)
