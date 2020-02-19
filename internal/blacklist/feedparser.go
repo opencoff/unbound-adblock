@@ -55,14 +55,11 @@ func (d *Builder) fetchURL(u string, ch chan string, isJson bool) {
 
 	defer resp.Body.Close()
 
-	var n int
 	if isJson {
-		n = jsonIO(resp.Body, ch, nil)
+		_ = jsonIO(resp.Body, ch, nil)
 	} else {
-		n = textIO(resp.Body, ch, nil)
+		_ = textIO(resp.Body, ch, nil)
 	}
-
-	d.log.Debug("adding blacklist from %s: %d entries", u, n)
 }
 
 func isIP4(s string) bool {

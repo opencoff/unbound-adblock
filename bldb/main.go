@@ -14,13 +14,45 @@ import (
 
 	"github.com/opencoff/unbound-adblock/internal/blacklist"
 
-	"github.com/opencoff/go-options"
+	flag "github.com/opencoff/pflag"
 )
 
 var Z string = path.Base(os.Args[0])
-var Verbose bool = false
-var Optdesc string = fmt.Sprintf(`
-Usage: %s [options] blacklist [blacklist ...]
+var Verbose bool
+
+
+func Progress(s string, v ...interface{}) {
+	if !Verbose {
+		return
+	}
+
+	if n := len(s); s[n-1] != '\n' {
+		s += "\n"
+	}
+	s = fmt.Sprintf(s, v...)
+	os.Stderr.WriteString(s)
+	os.Stderr.Sync()
+}
+
+
+func init() {
+	runtime.GOMAXPROCS(runtime.NumCPU())
+}
+
+func main() {
+	flag.SetInterspersed(true)
+
+	var feed string
+	var format string
+	var wl StringList
+
+	flag.BoolVarP(&Verbose, "verbose", "v", false, "Show verbose output")
+	flag.StringVarP(&feed, "feed", "F", "", "Read blacklists from feed file `F`")
+	flag.VarP(&wl, "whitelist", "W", "Add whistlist entries from file `F`")
+	flag.StringVarP(&format, "output-format", "f", "", "Set output format to `T` (text or unbound)")
+
+	flag.Usage = func() {
+		fmt.Printf(`Usage: %s [options] [blacklist ...]
 
 Read one or more blacklist files and generate a composite file containing
 blacklisted hosts and domains. The final output is written to STDOUT.
@@ -32,50 +64,22 @@ The feed.txt is a simple file:
 
 Example:
 
-    txt http://pgl.yoyo.org/files/adhosts/plaintext
-    txt http://mirror2.malwaredomains.com/files/justdomains
+txt http://pgl.yoyo.org/files/adhosts/plaintext
+txt http://mirror2.malwaredomains.com/files/justdomains
 
---
-#          Options
-help       -h,--help            Show this help message and exit
-verbose    -v,--verbose         Show verbose progress messages [False]
-feed=      -F=T,--feed=T        Read a URL list (feed) from file 'T'
-whitelist= -W=F,--whitelist=F   Read additional whitelist entries from file 'F'
---
-Note: You can use "whitelist" option multiple times and every use is concatenative.
---
-*
---`, Z, Z, Z)
+Options:
+`, Z)
 
-var Optspec = options.MustParse(Optdesc)
-
-func init() {
-	runtime.GOMAXPROCS(runtime.NumCPU())
-}
-
-func main() {
-	opt, err := Optspec.Interpret(os.Args, []string{})
-	if err != nil {
-		die("%s", err)
-	}
-	if opt.GetBool("help") {
-		Optspec.PrintUsageAndExit()
-	}
-	if len(opt.Args) < 1 {
-		die("Too few arguments. Try '%s --help'", Z)
+		flag.PrintDefaults()
+		os.Exit(0)
 	}
 
-	var prio L.Priority = L.LOG_INFO
-
-	if opt.GetBool("verbose") {
-		Verbose = true
-		prio = L.LOG_DEBUG
-
-	}
+	flag.Parse()
+	args := flag.Args()
 
 	bb := blacklist.NewBuilder()
-	if v := opt.GetMulti("whitelist"); v != nil {
-		for _, f := range v {
+	if len(wl.V) > 0 {
+		for _, f := range wl.V {
 			err := bb.AddWhitelist(f)
 			if err != nil {
 				die("%s", err)
@@ -83,8 +87,8 @@ func main() {
 		}
 	}
 
-	if f, ok := opt.Get("feed"); ok {
-		err := addfeed(bb, f)
+	if len(feed) > 0 {
+		err := addfeed(bb, feed)
 		if err != nil {
 			die("%s", err)
 		}
@@ -92,14 +96,17 @@ func main() {
 
 	// finally, add the various blacklist files from the command
 	// line
-	for _, f := range opt.Args {
+	for _, f := range args {
 		err := bb.AddBlacklist(f)
 		if err != nil {
 			die("%s", err)
 		}
 	}
 
-	bl := bb.Finalize()
+	bl, err := bb.Finalize()
+	if len(err) != 0 {
+		die("%v", err)
+	}
 
 	bl.Dump(os.Stdout)
 }

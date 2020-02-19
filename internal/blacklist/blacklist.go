@@ -76,66 +76,36 @@ func (d *Builder) Finalize() (*BL, []error) {
 		return nil, d.errs
 	}
 
-	// Remove entries in 'm' that are in the whitelist.
-	prune := func(m map[string]bool) map[string]bool {
-		x := make(map[string]bool)
-		for n, _ := range m {
-			if !d.w.match(n) {
-				x[n] = true
-			}
-		}
-		return x
-	}
-
-	dom := prune(d.b.domains)
-	hosts := prune(d.b.hosts)
-
+	// Remove items that are in the whitelist
+	dom := d.w.prune(d.b.domains)
+	hosts := d.w.prune(d.b.hosts)
 
 	// remove entries in hosts that already have a top level domain in 'dom'
-nexthost:
-
-	for h, _ := range hosts {
+	hosts.Range(func (k, v interface{}) bool {
+		h := k.(string)
 		t := domTree(h)
 		for _, p := range t {
-			if _, ok := dom[p]; ok {
-				delete(hosts, h)
-				continue nexthost
+			if _, ok := dom.Load(p); ok {
+				hosts.Delete(k)
+				return true
 			}
 		}
-	}
-
-	dmap := new(sync.Map)
-	hmap := new(sync.Map)
-
-	for h := range hosts {
-		hmap.Store(h, true)
-	}
-
-	for d := range dom {
-		dmap.Store(d, true)
-	}
-
-	//fmt.Printf("domains %d, hosts %d (total %d)", len(dom), len(hosts), len(dom)+len(hosts))
+		return true
+	})
 
 	db := &BL{
-		hosts:   hmap,
-		domains: dmap,
-		ndoms:   len(dom),
-		nhosts:  len(hosts),
+		hosts:   hosts,
+		domains: dom,
 	}
-	return db
+	return db, nil
 }
 
 // -- methods on 'BL' --
 
 // Fast lookup table
 type BL struct {
-
 	domains *sync.Map
 	hosts   *sync.Map
-
-	ndoms	int
-	nhosts  int
 }
 
 // XXX golang says concurrent reads from a map are safe.
@@ -156,9 +126,6 @@ func matchSuffix(m *sync.Map, t []string) bool {
 	return false
 }
 
-func (b BL) String() string {
-	return fmt.Sprintf("blacklist: %d domains, %d hosts (%d total)", b.ndoms, b.nhosts, b.ndoms+b.nhosts)
-}
 
 // Write DB to file 'fd' and close
 func (b *BL) Dump(w io.Writer) {
@@ -174,8 +141,8 @@ func (b *BL) Dump(w io.Writer) {
 
 	var wg sync.WaitGroup
 
-	dl := make([]string, 0, b.ndoms)
-	hl := make([]string, 0, b.nhosts)
+	dl := make([]string, 0, 1024)
+	hl := make([]string, 0, 1024)
 
 	wg.Add(1)
 	go func() {
@@ -196,19 +163,18 @@ func (b *BL) Dump(w io.Writer) {
 type db struct {
 
 	// Exact domain name matches
-	hosts map[string]bool
+	hosts *sync.Map
 
 	// full and sub-domain name matches - these names start with '.'
-	domains map[string]bool
+	domains *sync.Map
 
-	mu sync.Mutex
 	wg sync.WaitGroup
 }
 
 func newDB() *db {
 	return &db{
-		hosts:   make(map[string]bool),
-		domains: make(map[string]bool),
+		hosts:   new(sync.Map),
+		domains: new(sync.Map),
 	}
 }
 
@@ -244,18 +210,14 @@ func (d *db) addFromChan(ch chan string) {
 				s = s[:len(s)-1]
 			}
 
-			d.mu.Lock()
-
 			if s[0] == '.' {
 				p := s[1:]
-				d.domains[p] = true
+				d.domains.Store(p, true)
 			} else if domIsTopLevel(s) {
-				d.domains[s] = true
+				d.domains.Store(s, true)
 			} else {
-				d.hosts[s] = true
+				d.hosts.Store(s, true)
 			}
-
-			d.mu.Unlock()
 		}
 		wg.Done()
 	}(ch, &d.wg)
@@ -264,6 +226,19 @@ func (d *db) addFromChan(ch chan string) {
 // Wait for any go routines that did I/O to complete
 func (d *db) syncWait() {
 	d.wg.Wait()
+}
+
+// Prune items in 'm' that belong to this list
+func (d *db) prune(m *sync.Map) *sync.Map {
+	x := new(sync.Map)
+	m.Range(func (k, v interface{}) bool {
+		s := k.(string)
+		if !d.match(s) {
+			x.Store(s, true)
+		}
+		return true
+	})
+	return x
 }
 
 // Return true if domain 'nm' is in the DB 'd'; false otherwise.
