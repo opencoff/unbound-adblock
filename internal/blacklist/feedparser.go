@@ -122,10 +122,11 @@ func (d *Builder) maybeCached(u string) (*os.File, bool, error) {
 	}
 
 	now := time.Now()
-	if fi.Size() > 0 && now.Sub(fi.ModTime()) < (24*time.Hour) {
+	if !d.nocache && (fi.Size() > 0 && now.Sub(fi.ModTime()) < (24*time.Hour)) {
 		return fd, true, nil
 	}
 
+	fd.Truncate(0)
 	fmt.Fprintf(fd, "# %s\n", u)
 	return fd, false, nil
 }

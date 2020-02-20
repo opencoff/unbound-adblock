@@ -30,7 +30,7 @@ ifneq ($(BL),)
 	input += $(BL)
 endif
 
-conf = bad-hosts.conf newbl.conf
+conf = bad-hosts.conf big.conf
 
 all: $(conf)
 

@@ -1,6 +1,9 @@
-#dataxu.com
-#dataxu.net
-#emarketer.com
+.dropbox.com
+.netflix.com
+.shopify.com
+goo.gl
+bit.ly
+j.mp
 
 # A bunch of people use qualtrics. Why?
 qualtrics.com

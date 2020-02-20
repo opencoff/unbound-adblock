@@ -33,6 +33,7 @@ type Builder struct {
 
 	verbose  func(s string, v ...interface{})
 	cachedir string
+	nocache bool
 
 	final bool
 
@@ -40,7 +41,7 @@ type Builder struct {
 }
 
 // Make a new blacklist DB
-func NewBuilder(cachedir string, prog func(s string, v ...interface{})) *Builder {
+func NewBuilder(cachedir string, nocache bool, prog func(s string, v ...interface{})) *Builder {
 	if len(cachedir) == 0 {
 		cachedir = "."
 	}
@@ -50,6 +51,7 @@ func NewBuilder(cachedir string, prog func(s string, v ...interface{})) *Builder
 		w:        newDB(),
 		verbose:  prog,
 		cachedir: cachedir,
+		nocache:  nocache,
 	}
 
 	return d
@@ -257,40 +259,6 @@ func (d *db) match(nm string) bool {
 	return matchSuffix(d.domains, t) || matchSuffix(d.hosts, t)
 }
 
-// Convert a domain name into an array of names - each successively shorter by
-// one sub-component. e.g., given 'www.aaa.bbb.ccc.com', this function
-// returns an array of strings:
-//      0: www.aaa.bbb.ccc.com
-//      1: aaa.bbb.ccc.com
-//      2: bbb.ccc.com
-//      3: ccc.com
-func domTreeX(s string) []string {
-	n := 0
-	for _, c := range s {
-		if c == '.' {
-			n += 1
-		}
-	}
-
-	if n <= 1 {
-		return []string{s}
-	}
-
-	var v []string
-
-	i := 0
-	v = append(v, s)
-	for i = 0; i < len(s); i++ {
-		if s[i] == '.' {
-			t := s[i+1:]
-			v = append(v, t)
-		}
-	}
-
-	// We don't want the TLD.
-	v = reverse(v)
-	return v[1:]
-}
 
 // Convert a domain name into an array of names - each successively shorter by
 // one sub-component. e.g., given 'www.aaa.bbb.ccc.com', this function

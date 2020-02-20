@@ -48,20 +48,22 @@ func main() {
 	var format string
 	var wl StringList
 	var outfile string
-	var cache string
+	var cachedir string
+	var nocache bool
 
+	flag.BoolVarP(&nocache, "no-cache", "", false, "Ignore the cached blocklist")
 	flag.BoolVarP(&Verbose, "verbose", "v", false, "Show verbose output")
 	flag.StringVarP(&feed, "feed", "F", "", "Read blacklists from feed file `F`")
 	flag.VarP(&wl, "whitelist", "W", "Add whistlist entries from file `F`")
 	flag.StringVarP(&format, "output-format", "f", "", "Set output format to `T` (text or unbound)")
 	flag.StringVarP(&outfile, "output-file", "o", "", "Write output to file `F`")
-	flag.StringVarP(&cache, "cache-dir", "c", ".", "Use `D` as the cache directory")
+	flag.StringVarP(&cachedir, "cache-dir", "c", ".", "Use `D` as the cache directory")
 
 	flag.Usage = func() {
 		fmt.Printf(`Usage: %s [options] [blacklist ...]
 
 Read one or more blacklist files and generate a composite file containing
-blacklisted hosts and domains. The final output is written to STDOUT.
+blacklisted hosts and domains. The final output is by default written to STDOUT.
 
 %s can optionally read a feed (txt file) of well known 3rd party malware and tracker URLs.
 The feed.txt is a simple file:
@@ -74,7 +76,7 @@ txt http://pgl.yoyo.org/files/adhosts/plaintext
 txt http://mirror2.malwaredomains.com/files/justdomains
 
 Options:
-`, Z)
+`, Z, Z)
 
 		flag.PrintDefaults()
 		os.Exit(0)
@@ -108,7 +110,7 @@ Options:
 
 	args := flag.Args()
 
-	bb := blacklist.NewBuilder(cache, Progress)
+	bb := blacklist.NewBuilder(cachedir, nocache, Progress)
 	if len(wl.V) > 0 {
 		for _, f := range wl.V {
 			err := bb.AddWhitelist(f)
