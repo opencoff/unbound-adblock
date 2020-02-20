@@ -7,36 +7,44 @@
 #
 #
 
+os := $(shell uname | tr '[A-Z]' '[a-z]')
+arch := $(shell uname -m)
+
+x86_64-alias := amd64
+
+ifneq ($($(arch)-alias),)
+	arch := $($(arch)-alias)
+endif
+
+bindir = ./bin/$(os)-$(arch)
+bin = $(bindir)/blgen
+
 WL = $(wildcard whitelist.txt)
 BL = $(wildcard blacklist.txt)
 
-mkadblock = python ./mk-adblock.py
-
 ifneq ($(WL),)
-	wlopt = -w $(WL)
+	wlopt = -W $(WL)
 endif
 
 ifneq ($(BL),)
 	input += $(BL)
 endif
 
-ifeq ($(FLUSH),1)
-	flush = -f
-endif
+conf = bad-hosts.conf newbl.conf
 
+all: $(conf)
 
-bad = bad-hosts.txt
-conf = $(bad:.txt=.conf)
+bad-hosts.conf: bigfeed.txt $(WL) $(BL) $(bin)
+	$(bin) -v -o $@ -f unbound -F $< $(wlopt) $(BL)
 
-.PHONY: phony
+newbl.conf: newfeed.txt $(WL) $(BL) $(bin)
+	$(bin) -v -o $@ -f unbound -F $< -W $(WL) -W whitelist.list $(BL)
+
+$(bin)::
+	./build -s
+
+.PHONY: phony $(bin)
 .SUFFIXES: .conf .txt
-
-all: $(bad)
-
-
-$(bad): bigfeed.txt $(WL) $(BL) phony
-	$(mkadblock) --summary $(flush) $(wlopt) -u $(conf) -p bad- -L $< $(input)
-
 
 clean: phony
 	-rm -f bad-*

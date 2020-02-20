@@ -9,11 +9,13 @@ package blacklist
 
 import (
 	"bufio"
+	"crypto/sha256"
 	"encoding/json"
 	"fmt"
 	"io"
 	"net"
 	"net/http"
+	"os"
 	"strings"
 	"time"
 )
@@ -21,48 +23,111 @@ import (
 // Fetch URL and write contents to chan 'ch'
 func (d *Builder) fetchURL(u string, ch chan string, isJson bool) {
 
-	req, err := http.NewRequest("GET", u, nil)
+	defer close(ch)
+
+	var rfd io.Reader
+	var wfd io.Writer
+	var cstr string
+
+	// We cache data for a day and not fetch everytime.
+	fd, cached, err := d.maybeCached(u)
 	if err != nil {
 		d.Lock()
-		defer d.Unlock()
+		d.errs = append(d.errs, fmt.Errorf("cache: %s: %s", u, err))
+		d.Unlock()
 
-		d.errs = append(d.errs, fmt.Errorf("GET %s: %s", u, err))
 		return
 	}
 
-	dia := &net.Dialer{
-		Timeout:   5 * time.Second,
-		KeepAlive: 0 * time.Second,
+	defer fd.Close()
+	if !cached {
+		req, err := http.NewRequest("GET", u, nil)
+		if err != nil {
+			d.Lock()
+			defer d.Unlock()
+
+			d.errs = append(d.errs, fmt.Errorf("GET %s: %s", u, err))
+			return
+		}
+
+		dia := &net.Dialer{
+			Timeout:   5 * time.Second,
+			KeepAlive: 0 * time.Second,
+		}
+
+		cli := &http.Client{
+			Transport: &http.Transport{
+				Dial:                dia.Dial,
+				TLSHandshakeTimeout: 8 * time.Second,
+				MaxIdleConnsPerHost: 4,
+				IdleConnTimeout:     10 * time.Second,
+			},
+		}
+
+		resp, err := cli.Do(req)
+		if err != nil {
+			d.Lock()
+			d.errs = append(d.errs, fmt.Errorf("GET %s: %s", u, err))
+			defer d.Unlock()
+
+			return
+		}
+
+		defer resp.Body.Close()
+		wfd = fd
+		rfd = resp.Body
+		cstr = "+fetch"
+	} else {
+		rfd = fd
+		wfd = nil
+		cstr = "+cache"
 	}
-
-	cli := &http.Client{
-		Transport: &http.Transport{
-			Dial:                dia.Dial,
-			TLSHandshakeTimeout: 8 * time.Second,
-			MaxIdleConnsPerHost: 4,
-			IdleConnTimeout:     10 * time.Second,
-		},
-	}
-
-	resp, err := cli.Do(req)
-	if err != nil {
-		d.Lock()
-		defer d.Unlock()
-
-		d.errs = append(d.errs, fmt.Errorf("GET %s: %s", u, err))
-		return
-	}
-
-	defer resp.Body.Close()
 
 	var n int
 	if isJson {
-		n = jsonIO(resp.Body, ch, nil)
+		n = jsonIO(rfd, ch, wfd)
 	} else {
-		n = textIO(resp.Body, ch, nil)
+		n = textIO(rfd, ch, wfd)
 	}
 
-	d.progress("%32.32s: %d entries", u, n)
+	d.progress("%48.48s: %d entries [%s]", u, n, cstr)
+}
+
+// Return data from the cache if it is not stale, else create the
+// file for caching
+func (d *Builder) maybeCached(u string) (*os.File, bool, error) {
+	var nm string = u
+
+	csum := sha256.Sum256([]byte(u))
+	sum := csum[:10]
+	if strings.HasPrefix(u, "http://") {
+		nm = u[7:]
+	} else if strings.HasPrefix(u, "https://") {
+		nm = u[8:]
+	}
+
+	if i := strings.Index(nm, "/"); i > 0 {
+		nm = nm[:i]
+	}
+
+	fn := fmt.Sprintf("%s/.%s-%x", d.cachedir, nm, sum)
+	fd, err := os.OpenFile(fn, os.O_RDWR|os.O_CREATE, 0640)
+	if err != nil {
+		return nil, false, err
+	}
+
+	fi, err := fd.Stat()
+	if err != nil {
+		return nil, false, err
+	}
+
+	now := time.Now()
+	if fi.Size() > 0 && now.Sub(fi.ModTime()) < (24*time.Hour) {
+		return fd, true, nil
+	}
+
+	fmt.Fprintf(fd, "# %s\n", u)
+	return fd, false, nil
 }
 
 func isIP4(s string) bool {
@@ -83,8 +148,6 @@ func isIP4(s string) bool {
 //   - hostname
 func textIO(rd io.Reader, ch chan string, wrfd io.Writer) int {
 	var s string
-
-	defer close(ch)
 
 	if wrfd != nil {
 		tee := io.TeeReader(rd, wrfd)
@@ -137,8 +200,6 @@ func jsonIO(rd io.Reader, ch chan string, wrfd io.Writer) int {
 	}
 
 	jj := json.NewDecoder(rd)
-
-	defer close(ch)
 
 	_, e := jj.Token() // consume '['
 	if e != nil {

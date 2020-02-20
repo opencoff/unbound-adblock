@@ -18,7 +18,10 @@ import (
 	flag "github.com/opencoff/pflag"
 )
 
+// basename of the program
 var Z string = path.Base(os.Args[0])
+
+// Controls global verbosity
 var Verbose bool
 
 func Progress(s string, v ...interface{}) {
@@ -45,12 +48,14 @@ func main() {
 	var format string
 	var wl StringList
 	var outfile string
+	var cache string
 
 	flag.BoolVarP(&Verbose, "verbose", "v", false, "Show verbose output")
 	flag.StringVarP(&feed, "feed", "F", "", "Read blacklists from feed file `F`")
 	flag.VarP(&wl, "whitelist", "W", "Add whistlist entries from file `F`")
 	flag.StringVarP(&format, "output-format", "f", "", "Set output format to `T` (text or unbound)")
 	flag.StringVarP(&outfile, "output-file", "o", "", "Write output to file `F`")
+	flag.StringVarP(&cache, "cache-dir", "c", ".", "Use `D` as the cache directory")
 
 	flag.Usage = func() {
 		fmt.Printf(`Usage: %s [options] [blacklist ...]
@@ -103,7 +108,7 @@ Options:
 
 	args := flag.Args()
 
-	bb := blacklist.NewBuilder(Progress)
+	bb := blacklist.NewBuilder(cache, Progress)
 	if len(wl.V) > 0 {
 		for _, f := range wl.V {
 			err := bb.AddWhitelist(f)
@@ -137,6 +142,7 @@ Options:
 	output(bl, outfd)
 }
 
+// generate a simple text dump of domains and hosts
 func textOut(b *blacklist.BL, fd io.WriteCloser) {
 	fmt.Fprintf(fd, `# %d domains, %d hosts
 # -- Domains --
@@ -144,9 +150,6 @@ func textOut(b *blacklist.BL, fd io.WriteCloser) {
 # -- Hosts --
 %s
 `, len(b.Domains), len(b.Hosts), strings.Join(b.Domains, "\n"), strings.Join(b.Hosts, "\n"))
-}
-
-func unboundOut(b *blacklist.BL, fd io.WriteCloser) {
 }
 
 func addfeed(bb *blacklist.Builder, feed string) error {

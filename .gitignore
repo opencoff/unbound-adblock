@@ -36,4 +36,7 @@
 .????*.json
 
 # auto-gen files
-bad-*.*
+bad*.conf
+new*conf
+bin/*
+.?????*-[0-9a-f]*

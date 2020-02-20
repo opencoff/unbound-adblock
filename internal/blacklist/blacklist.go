@@ -31,7 +31,8 @@ type Builder struct {
 	b *db // blacklist
 	w *db // whitelist
 
-	verbose func(s string, v ...interface{})
+	verbose  func(s string, v ...interface{})
+	cachedir string
 
 	final bool
 
@@ -39,11 +40,16 @@ type Builder struct {
 }
 
 // Make a new blacklist DB
-func NewBuilder(prog func(s string, v ...interface{})) *Builder {
+func NewBuilder(cachedir string, prog func(s string, v ...interface{})) *Builder {
+	if len(cachedir) == 0 {
+		cachedir = "."
+	}
+
 	d := &Builder{
-		b:       newDB(),
-		w:       newDB(),
-		verbose: prog,
+		b:        newDB(),
+		w:        newDB(),
+		verbose:  prog,
+		cachedir: cachedir,
 	}
 
 	return d
