@@ -34,11 +34,17 @@ conf = bad-hosts.conf newbl.conf
 
 all: $(conf)
 
-bad-hosts.conf: bigfeed.txt $(WL) $(BL) $(bin)
+bad-hosts.conf: myfeed.txt $(WL) $(BL) $(bin)
 	$(bin) -v -o $@ -f unbound -F $< $(wlopt) $(BL)
 
 newbl.conf: newfeed.txt $(WL) $(BL) $(bin)
 	$(bin) -v -o $@ -f unbound -F $< -W $(WL) -W whitelist.list $(BL)
+
+big.conf: bigfeed.txt $(WL) $(BL) $(bin)
+	$(bin) -v -o $@ -f unbound -F $< -W $(WL) -W whitelist.list $(BL)
+
+bigfeed.txt: myfeed.txt newfeed.txt
+	cat $^ > $@
 
 $(bin)::
 	./build -s

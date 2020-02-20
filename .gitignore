@@ -38,5 +38,7 @@
 # auto-gen files
 bad*.conf
 new*conf
+bigfeed.txt
+big.conf
 bin/*
 .?????*-[0-9a-f]*

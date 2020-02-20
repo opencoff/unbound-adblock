@@ -17,4 +17,13 @@ txt http://hosts-file.net/ad_servers.txt
 # Untested list from pi-hole
 #easy https://raw.githubusercontent.com/reek/anti-adblock-killer/master/anti-adblock-killer-filters.txt
 
+# Untested from pi-hole
+txt https://raw.githubusercontent.com/FadeMind/hosts.extras/master/StreamingAds/hosts
+txt https://raw.githubusercontent.com/anudeepND/youtubeadsblacklist/master/domainlist.txt
+txt https://raw.githubusercontent.com/piwik/referrer-spam-blacklist/master/spammers.txt
+txt https://hosts-file.net/grm.txt
+txt https://hosts-file.net/exp.txt
+txt https://hosts-file.net/emd.txt
+txt https://hosts-file.net/psh.txt
+
 # vim: tw=256:
