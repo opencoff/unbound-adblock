@@ -67,13 +67,14 @@ blacklisted hosts and domains. The final output is by default written to STDOUT.
 
 %s can optionally read a feed (txt file) of well known 3rd party malware and tracker URLs.
 The feed.txt is a simple file:
-- Each line starts with either a 'txt' or 'json' followed by a URL.
+
+- Each line starts with a URL containing blacklisted domains/hosts
+- Optionally, the feed-type can be a second word "txt" or "json".
 - The keyword 'txt' or 'json' identifies the type of output returned by the URL
 
 Example:
-
-txt http://pgl.yoyo.org/files/adhosts/plaintext
-txt http://mirror2.malwaredomains.com/files/justdomains
+	http://pgl.yoyo.org/files/adhosts/plaintext
+	http://mirror2.malwaredomains.com/files/justdomains json
 
 Options:
 `, Z, Z)
