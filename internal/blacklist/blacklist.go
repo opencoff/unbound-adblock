@@ -19,6 +19,7 @@ import (
 	"net"
 	"strings"
 	"sync"
+	"regexp"
 )
 
 // Abstraction for a blacklist DB builder
@@ -93,11 +94,23 @@ func (d *Builder) Finalize() (*BL, []error) {
 	var hosts *sync.Map = d.b.hosts
 
 	if !d.final {
+		var wg sync.WaitGroup
+
 		d.progress("Finalizing ..")
 
 		// Remove items that are in the whitelist
-		dom = d.w.prune(d.b.domains)
-		hosts = d.w.prune(d.b.hosts)
+		wg.Add(2)
+		go func() {
+			dom = d.w.prune(d.b.domains)
+			wg.Done()
+		}()
+
+		go func() {
+			hosts = d.w.prune(d.b.hosts)
+			wg.Done()
+		}()
+
+		wg.Wait()
 
 		// remove entries in hosts that already have a top level domain in 'dom'
 		hosts.Range(func(k, v interface{}) bool {
@@ -105,12 +118,14 @@ func (d *Builder) Finalize() (*BL, []error) {
 			t := domTree(h)
 			for _, p := range t {
 				if _, ok := dom.Load(p); ok {
-					hosts.Delete(k)
+					hosts.Delete(h)
 					return true
 				}
 			}
 			return true
 		})
+		d.b.domains = dom
+		d.b.hosts = hosts
 		d.final = true
 	}
 
@@ -128,16 +143,21 @@ func (d *Builder) Finalize() (*BL, []error) {
 	dl := make([]string, 0, 16384)
 	hl := make([]string, 0, 32768)
 
-	wg.Add(1)
+	wg.Add(2)
 	go func() {
 		hl = gather(hl, hosts)
 		wg.Done()
 	}()
 
-	dl = gather(dl, dom)
+
+	go func() {
+		dl = gather(dl, dom)
+		wg.Done()
+	}()
+
 	wg.Wait()
 
-	d.progress("%d domains, %d hosts\n", len(dl), len(hl))
+	d.progress("Total %d bad hosts; %d domains, %d hosts\n", len(dl)+len(hl), len(dl), len(hl))
 	db := &BL{
 		Hosts:   hl,
 		Domains: dl,
@@ -203,6 +223,7 @@ func (d *db) addFromChan(ch chan string) {
 
 	go func(ch chan string, wg *sync.WaitGroup) {
 		for s := range ch {
+			s = strings.ToLower(s)
 			if filter(s) {
 				continue
 			}
@@ -230,6 +251,21 @@ func (d *db) syncWait() {
 	d.wg.Wait()
 }
 
+// Prune items in 'm' that belong to this list
+func (d *db) prune(m *sync.Map) *sync.Map {
+	x := new(sync.Map)
+	m.Range(func(k, v interface{}) bool {
+		s := k.(string)
+		t := domTree(s)
+		if !matchSuffix(d.domains, t) && !matchSuffix(d.hosts, t) {
+			x.Store(s, true)
+		}
+		return true
+	})
+	return x
+}
+
+// match suffixes in 't' against entries in 'm'; return true if suffix matches, false otherwise
 func matchSuffix(m *sync.Map, t []string) bool {
 	for _, p := range t {
 		if _, ok := m.Load(p); ok {
@@ -238,27 +274,6 @@ func matchSuffix(m *sync.Map, t []string) bool {
 	}
 	return false
 }
-
-// Prune items in 'm' that belong to this list
-func (d *db) prune(m *sync.Map) *sync.Map {
-	x := new(sync.Map)
-	m.Range(func(k, v interface{}) bool {
-		s := k.(string)
-		if !d.match(s) {
-			x.Store(s, true)
-		}
-		return true
-	})
-	return x
-}
-
-// Return true if domain 'nm' is in the DB 'd'; false otherwise.
-func (d *db) match(nm string) bool {
-
-	t := domTree(nm)
-	return matchSuffix(d.domains, t) || matchSuffix(d.hosts, t)
-}
-
 
 // Convert a domain name into an array of names - each successively shorter by
 // one sub-component. e.g., given 'www.aaa.bbb.ccc.com', this function
@@ -316,6 +331,10 @@ func filter(s string) bool {
 		return true
 	}
 
+	if !_RX.Match([]byte(s)) {
+		return true
+	}
+
 	return false
 }
 
@@ -334,6 +353,7 @@ func genlines(fd io.ReadCloser) chan string {
 			}
 
 			ch <- s
+
 		}
 		close(ch)
 		fd.Close()
@@ -341,5 +361,9 @@ func genlines(fd io.ReadCloser) chan string {
 
 	return ch
 }
+
+var (
+	_RX = regexp.MustCompile(`^(?i:[a-z]+([a-z0-9-]*[a-z0-9]+)?(\.([a-z]+([a-z0-9-]*[a-z0-9]+)?)+)*)$`)
+)
 
 // vim: ft=go:sw=8:ts=8:noexpandtab:tw=98:

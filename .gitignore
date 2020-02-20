@@ -39,6 +39,6 @@
 bad*.conf
 new*conf
 bigfeed.txt
-big.conf
+big*.conf
 bin/*
 .?????*-[0-9a-f]*

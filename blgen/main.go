@@ -169,18 +169,20 @@ func addfeed(bb *blacklist.Builder, feed string) error {
 			continue
 		}
 
+		var json bool = false
 		v := strings.Fields(s)
-		if len(v) != 2 {
-			return fmt.Errorf("malformed feed line '%s ..'", s)
+		if len(v) > 1 {
+			switch v[1] {
+			case "", "txt", "text":
+				json = false
+
+			case "json", "JSON":
+				json = true
+			}
 		}
 
-		switch v[0] {
-		case "txt", "text":
-			bb.AddBlacklistURL(v[1], false)
+		bb.AddBlacklistURL(v[0], json)
 
-		case "json", "JSON":
-			bb.AddBlacklistURL(v[1], true)
-		}
 	}
 	return nil
 }

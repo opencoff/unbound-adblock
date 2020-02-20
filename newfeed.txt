@@ -1,51 +1,48 @@
-txt https://dbl.oisd.nl/ 	
-txt https://phishing.army/download/phishing_army_blocklist_extended.txt 	
-#txt https://tspprs.com/dl/crypto 	
-#txt https://tspprs.com/dl/tracking 	
-#txt https://tspprs.com/dl/spotify 	
-txt https://raw.githubusercontent.com/CHEF-KOCH/Audio-fingerprint-pages/master/AudioFp.txt 	
-txt https://raw.githubusercontent.com/CHEF-KOCH/Canvas-fingerprinting-pages/master/Canvas.txt 	
-txt https://raw.githubusercontent.com/CHEF-KOCH/WebRTC-tracking/master/WebRTC.txt 	
-txt https://raw.githubusercontent.com/CHEF-KOCH/CKs-FilterList/master/HOSTS/Game.txt 	
-txt https://raw.githubusercontent.com/CHEF-KOCH/NSABlocklist/master/HOSTS 	
-txt https://raw.githubusercontent.com/deathbybandaid/piholeparser/master/Subscribable-Lists/ParsedBlacklists/AakList.txt 	
-txt https://raw.githubusercontent.com/deathbybandaid/piholeparser/master/Subscribable-Lists/ParsedBlacklists/Prebake-Obtrusive.txt 	
-txt https://jasonhill.co.uk/pfsense/ytadblock.txt
+https://dbl.oisd.nl/
+https://phishing.army/download/phishing_army_blocklist_extended.txt
+https://raw.githubusercontent.com/CHEF-KOCH/Audio-fingerprint-pages/master/AudioFp.txt
+https://raw.githubusercontent.com/CHEF-KOCH/Canvas-fingerprinting-pages/master/Canvas.txt
+https://raw.githubusercontent.com/CHEF-KOCH/WebRTC-tracking/master/WebRTC.txt
+https://raw.githubusercontent.com/CHEF-KOCH/CKs-FilterList/master/HOSTS/Game.txt
+https://raw.githubusercontent.com/CHEF-KOCH/NSABlocklist/master/HOSTS
+https://raw.githubusercontent.com/deathbybandaid/piholeparser/master/Subscribable-Lists/ParsedBlacklists/AakList.txt
+https://raw.githubusercontent.com/deathbybandaid/piholeparser/master/Subscribable-Lists/ParsedBlacklists/Prebake-Obtrusive.txt
+https://jasonhill.co.uk/pfsense/ytadblock.txt
 
 # Second block
-txt https://raw.githubusercontent.com/hectorm/hmirror/master/data/adaway.org/list.txt 	
-txt https://raw.githubusercontent.com/hectorm/hmirror/master/data/adblock-nocoin-list/list.txt 	
-txt https://raw.githubusercontent.com/hectorm/hmirror/master/data/adguard-simplified/list.txt 	
-txt https://raw.githubusercontent.com/hectorm/hmirror/master/data/anudeepnd-adservers/list.txt 	
-txt https://raw.githubusercontent.com/hectorm/hmirror/master/data/disconnect.me-ad/list.txt 	
-txt https://raw.githubusercontent.com/hectorm/hmirror/master/data/disconnect.me-malvertising/list.txt 	
-txt https://raw.githubusercontent.com/hectorm/hmirror/master/data/disconnect.me-malware/list.txt 	
-txt https://raw.githubusercontent.com/hectorm/hmirror/master/data/disconnect.me-tracking/list.txt 	
-txt https://raw.githubusercontent.com/hectorm/hmirror/master/data/easylist/list.txt 	
-txt https://raw.githubusercontent.com/hectorm/hmirror/master/data/easyprivacy/list.txt 	
-txt https://raw.githubusercontent.com/hectorm/hmirror/master/data/eth-phishing-detect/list.txt 	
-txt https://raw.githubusercontent.com/hectorm/hmirror/master/data/fademind-add.2o7net/list.txt 	
-txt https://raw.githubusercontent.com/hectorm/hmirror/master/data/fademind-add.dead/list.txt 	
-txt https://raw.githubusercontent.com/hectorm/hmirror/master/data/fademind-add.risk/list.txt 	
-txt https://raw.githubusercontent.com/hectorm/hmirror/master/data/fademind-add.spam/list.txt 	
-txt https://raw.githubusercontent.com/hectorm/hmirror/master/data/kadhosts/list.txt 	
-txt https://raw.githubusercontent.com/hectorm/hmirror/master/data/malwaredomainlist.com/list.txt 	
-txt https://raw.githubusercontent.com/hectorm/hmirror/master/data/malwaredomains.com-immortaldomains/list.txt 	
-txt https://raw.githubusercontent.com/hectorm/hmirror/master/data/malwaredomains.com-justdomains/list.txt 	
-txt https://raw.githubusercontent.com/hectorm/hmirror/master/data/matomo.org-spammers/list.txt 	
-txt https://raw.githubusercontent.com/hectorm/hmirror/master/data/mitchellkrogza-badd-boyz-hosts/list.txt 	
-txt https://raw.githubusercontent.com/hectorm/hmirror/master/data/pgl.yoyo.org/list.txt 	
-txt https://raw.githubusercontent.com/hectorm/hmirror/master/data/ransomwaretracker.abuse.ch/list.txt 	
-txt https://raw.githubusercontent.com/hectorm/hmirror/master/data/someonewhocares.org/list.txt 	
-txt https://raw.githubusercontent.com/hectorm/hmirror/master/data/spam404.com/list.txt 	
-txt https://raw.githubusercontent.com/hectorm/hmirror/master/data/stevenblack/list.txt 	
-txt https://raw.githubusercontent.com/hectorm/hmirror/master/data/winhelp2002.mvps.org/list.txt 	
-txt https://raw.githubusercontent.com/hectorm/hmirror/master/data/zerodot1-coinblockerlists-browser/list.txt 	
-txt https://raw.githubusercontent.com/hectorm/hmirror/master/data/zeustracker.abuse.ch/list.txt 	
-txt https://raw.githubusercontent.com/CHEF-KOCH/Audio-fingerprint-pages/master/AudioFp.txt 	
-txt https://raw.githubusercontent.com/CHEF-KOCH/Canvas-fingerprinting-pages/master/Canvas.txt 	
-txt https://raw.githubusercontent.com/CHEF-KOCH/WebRTC-tracking/master/WebRTC.txt 	
-txt https://raw.githubusercontent.com/CHEF-KOCH/CKs-FilterList/master/Anti-Corp/hosts/NSABlocklist.txt 	
-txt https://gitlab.com/quidsup/notrack-blocklists/raw/master/notrack-blocklist.txt 	
-txt https://gitlab.com/quidsup/notrack-blocklists/raw/master/notrack-malware.txt 	
-txt https://www.stopforumspam.com/downloads/toxic_domains_whole.txt
+https://raw.githubusercontent.com/hectorm/hmirror/master/data/adaway.org/list.txt
+https://raw.githubusercontent.com/hectorm/hmirror/master/data/adblock-nocoin-list/list.txt
+https://raw.githubusercontent.com/hectorm/hmirror/master/data/adguard-simplified/list.txt
+https://raw.githubusercontent.com/hectorm/hmirror/master/data/anudeepnd-adservers/list.txt
+https://raw.githubusercontent.com/hectorm/hmirror/master/data/disconnect.me-ad/list.txt
+https://raw.githubusercontent.com/hectorm/hmirror/master/data/disconnect.me-malvertising/list.txt
+https://raw.githubusercontent.com/hectorm/hmirror/master/data/disconnect.me-malware/list.txt
+https://raw.githubusercontent.com/hectorm/hmirror/master/data/disconnect.me-tracking/list.txt
+https://raw.githubusercontent.com/hectorm/hmirror/master/data/easylist/list.txt
+https://raw.githubusercontent.com/hectorm/hmirror/master/data/easyprivacy/list.txt
+https://raw.githubusercontent.com/hectorm/hmirror/master/data/eth-phishing-detect/list.txt
+https://raw.githubusercontent.com/hectorm/hmirror/master/data/fademind-add.2o7net/list.txt
+https://raw.githubusercontent.com/hectorm/hmirror/master/data/fademind-add.dead/list.txt
+https://raw.githubusercontent.com/hectorm/hmirror/master/data/fademind-add.risk/list.txt
+https://raw.githubusercontent.com/hectorm/hmirror/master/data/fademind-add.spam/list.txt
+https://raw.githubusercontent.com/hectorm/hmirror/master/data/kadhosts/list.txt
+https://raw.githubusercontent.com/hectorm/hmirror/master/data/malwaredomainlist.com/list.txt
+https://raw.githubusercontent.com/hectorm/hmirror/master/data/malwaredomains.com-immortaldomains/list.txt
+https://raw.githubusercontent.com/hectorm/hmirror/master/data/malwaredomains.com-justdomains/list.txt
+https://raw.githubusercontent.com/hectorm/hmirror/master/data/matomo.org-spammers/list.txt
+https://raw.githubusercontent.com/hectorm/hmirror/master/data/mitchellkrogza-badd-boyz-hosts/list.txt
+https://raw.githubusercontent.com/hectorm/hmirror/master/data/pgl.yoyo.org/list.txt
+https://raw.githubusercontent.com/hectorm/hmirror/master/data/ransomwaretracker.abuse.ch/list.txt
+https://raw.githubusercontent.com/hectorm/hmirror/master/data/someonewhocares.org/list.txt
+https://raw.githubusercontent.com/hectorm/hmirror/master/data/spam404.com/list.txt
+https://raw.githubusercontent.com/hectorm/hmirror/master/data/stevenblack/list.txt
+https://raw.githubusercontent.com/hectorm/hmirror/master/data/winhelp2002.mvps.org/list.txt
+https://raw.githubusercontent.com/hectorm/hmirror/master/data/zerodot1-coinblockerlists-browser/list.txt
+https://raw.githubusercontent.com/hectorm/hmirror/master/data/zeustracker.abuse.ch/list.txt
+https://raw.githubusercontent.com/CHEF-KOCH/Audio-fingerprint-pages/master/AudioFp.txt
+https://raw.githubusercontent.com/CHEF-KOCH/Canvas-fingerprinting-pages/master/Canvas.txt
+https://raw.githubusercontent.com/CHEF-KOCH/WebRTC-tracking/master/WebRTC.txt
+https://raw.githubusercontent.com/CHEF-KOCH/CKs-FilterList/master/Anti-Corp/hosts/NSABlocklist.txt
+https://gitlab.com/quidsup/notrack-blocklists/raw/master/notrack-blocklist.txt
+https://gitlab.com/quidsup/notrack-blocklists/raw/master/notrack-malware.txt
+https://www.stopforumspam.com/downloads/toxic_domains_whole.txt
