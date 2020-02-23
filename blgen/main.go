@@ -50,6 +50,7 @@ func main() {
 	var outfile string
 	var cachedir string
 	var nocache bool
+	var wlout string
 
 	flag.BoolVarP(&nocache, "no-cache", "", false, "Ignore the cached blocklist")
 	flag.BoolVarP(&Verbose, "verbose", "v", false, "Show verbose output")
@@ -58,6 +59,7 @@ func main() {
 	flag.StringVarP(&format, "output-format", "f", "", "Set output format to `T` (text or unbound)")
 	flag.StringVarP(&outfile, "output-file", "o", "", "Write output to file `F`")
 	flag.StringVarP(&cachedir, "cache-dir", "c", ".", "Use `D` as the cache directory")
+	flag.StringVarP(&wlout, "output-whitelist", "", "", "Write whitelist output to `F`")
 
 	flag.Usage = func() {
 		fmt.Printf(`Usage: %s [options] [blacklist ...]
@@ -114,6 +116,7 @@ Options:
 	bb := blacklist.NewBuilder(cachedir, nocache, Progress)
 	if len(wl.V) > 0 {
 		for _, f := range wl.V {
+			Progress("Adding whitelist from %s ..", f)
 			err := bb.AddWhitelist(f)
 			if err != nil {
 				die("%s", err)
@@ -122,6 +125,7 @@ Options:
 	}
 
 	if len(feed) > 0 {
+		Progress("Adding feed from %s ..", feed)
 		err := addfeed(bb, feed)
 		if err != nil {
 			die("%s", err)
@@ -131,6 +135,7 @@ Options:
 	// finally, add the various blacklist files from the command
 	// line
 	for _, f := range args {
+		Progress("Adding blacklist from %s ..", f)
 		err := bb.AddBlacklist(f)
 		if err != nil {
 			die("%s", err)
@@ -143,6 +148,17 @@ Options:
 	}
 
 	output(bl, outfd)
+
+	if len(wlout) > 0 {
+		fd, err := os.OpenFile(wlout, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0644)
+		if err != nil {
+			die("can't create %s: %s", wlout, err)
+		}
+		fmt.Fprintf(fd, "# Whitelist %d entries\n%s\n", len(bl.Whitelist),
+			strings.Join(bl.Whitelist, "\n"))
+
+		fd.Close()
+	}
 }
 
 // generate a simple text dump of domains and hosts

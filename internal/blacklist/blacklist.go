@@ -17,9 +17,9 @@ import (
 	"fmt"
 	"io"
 	"net"
+	"regexp"
 	"strings"
 	"sync"
-	"regexp"
 )
 
 // Abstraction for a blacklist DB builder
@@ -34,7 +34,7 @@ type Builder struct {
 
 	verbose  func(s string, v ...interface{})
 	cachedir string
-	nocache bool
+	nocache  bool
 
 	final bool
 
@@ -142,25 +142,39 @@ func (d *Builder) Finalize() (*BL, []error) {
 
 	dl := make([]string, 0, 16384)
 	hl := make([]string, 0, 32768)
+	w1 := make([]string, 0, 2048)
+	w2 := make([]string, 0, 2048)
 
-	wg.Add(2)
+	wg.Add(4)
 	go func() {
 		hl = gather(hl, hosts)
 		wg.Done()
 	}()
-
 
 	go func() {
 		dl = gather(dl, dom)
 		wg.Done()
 	}()
 
+	go func() {
+		w1 = gather(w1, d.w.domains)
+		wg.Done()
+	}()
+
+	go func() {
+		w2 = gather(w2, d.w.hosts)
+		wg.Done()
+	}()
+
 	wg.Wait()
 
-	d.progress("Total %d bad hosts; %d domains, %d hosts\n", len(dl)+len(hl), len(dl), len(hl))
+	w1 = append(w1, w2...)
+	d.progress("Total %d bad hosts; %d domains, %d hosts (%d whitelisted)\n",
+		len(dl)+len(hl), len(dl), len(hl), len(w1))
 	db := &BL{
-		Hosts:   hl,
-		Domains: dl,
+		Hosts:     hl,
+		Domains:   dl,
+		Whitelist: w1,
 	}
 	return db, nil
 }
@@ -175,8 +189,9 @@ func (d *Builder) progress(s string, v ...interface{}) {
 
 // Fast lookup table
 type BL struct {
-	Domains []string
-	Hosts   []string
+	Domains   []string
+	Hosts     []string
+	Whitelist []string
 }
 
 // -- methods on 'db' --

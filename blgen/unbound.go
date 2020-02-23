@@ -5,11 +5,11 @@
 package main
 
 import (
+	"fmt"
 	"io"
 	"os"
-	"fmt"
-	"time"
 	"strings"
+	"time"
 
 	"github.com/opencoff/unbound-adblock/internal/blacklist"
 )
@@ -42,4 +42,3 @@ server:
 
 	fd.Close()
 }
-

@@ -4,6 +4,8 @@
 goo.gl
 bit.ly
 j.mp
+dropboxusercontent.com
+dropbox.com
 
 # A bunch of people use qualtrics. Why?
 qualtrics.com
