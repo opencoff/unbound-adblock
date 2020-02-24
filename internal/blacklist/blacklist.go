@@ -378,7 +378,7 @@ func genlines(fd io.ReadCloser) chan string {
 }
 
 var (
-	_RX = regexp.MustCompile(`^(?i:[a-z]+([a-z0-9-]*[a-z0-9]+)?(\.([a-z]+([a-z0-9-]*[a-z0-9]+)?)+)*)$`)
+	_RX = regexp.MustCompile(`^(?i:\.?[a-z]+([a-z0-9-]*[a-z0-9]+)?(\.([a-z]+([a-z0-9-]*[a-z0-9]+)?)+)*)$`)
 )
 
 // vim: ft=go:sw=8:ts=8:noexpandtab:tw=98:
