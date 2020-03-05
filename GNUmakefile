@@ -7,16 +7,10 @@
 #
 #
 
-os := $(shell uname | tr '[A-Z]' '[a-z]')
-arch := $(shell uname -m)
 
-x86_64-alias := amd64
+arch = $(shell ./build --print-arch)
 
-ifneq ($($(arch)-alias),)
-	arch := $($(arch)-alias)
-endif
-
-bindir = ./bin/$(os)-$(arch)
+bindir = ./bin/$(arch)
 bin = $(bindir)/blgen
 
 WL = $(wildcard whitelist.txt)
@@ -30,15 +24,12 @@ ifneq ($(BL),)
 	input += $(BL)
 endif
 
-conf = bad-hosts.conf big.conf
+conf = big.conf
 
 all: $(conf)
 
 bad-hosts.conf: myfeed.txt $(WL) $(BL) $(bin)
 	$(bin) -v -o $@ -f unbound -F $< $(wlopt) $(BL)
-
-newbl.conf: newfeed.txt $(WL) $(BL) $(bin)
-	$(bin) -v -o $@ -f unbound -F $< -W $(WL) -W whitelist.list $(BL)
 
 big.conf: bigfeed.txt $(WL) whitelist.list $(BL) $(bin)
 	$(bin) -v -o $@ --output-whitelist w.txt -f unbound -F $< -W $(WL) -W whitelist.list $(BL)
@@ -46,10 +37,10 @@ big.conf: bigfeed.txt $(WL) whitelist.list $(BL) $(bin)
 bigfeed.txt: myfeed.txt newfeed.txt
 	cat $^ > $@
 
-$(bin)::
+$(bin): ./blgen ./internal/blacklist
 	./build -s
 
-.PHONY: phony $(bin)
+.PHONY: phony
 .SUFFIXES: .conf .txt
 
 clean: phony

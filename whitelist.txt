@@ -6,6 +6,8 @@ bit.ly
 j.mp
 dropboxusercontent.com
 dropbox.com
+anandtech.com
+investopedia.com
 
 # A bunch of people use qualtrics. Why?
 qualtrics.com

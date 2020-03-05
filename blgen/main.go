@@ -1,5 +1,6 @@
-// main.go -- test program for dns blacklist host generator
+// main.go -- dns blacklist host generator
 //
+// Author: Sudhi Herle <sw@herle.net>
 // License GPLv2
 
 package main

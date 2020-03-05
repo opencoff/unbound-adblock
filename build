@@ -153,6 +153,7 @@ done
 Tool=
 doinit=0
 args=
+Printarch=0
 
 #set -x
 ac_prev=
@@ -214,6 +215,10 @@ do
             set -x
             ;;
 
+        --print-arch)
+            Printarch=1
+            ;;
+
         *) # first non option terminates option processing.
            # we gather all remaining args and bundle them up.
             args="$args $ac_option"
@@ -272,6 +277,11 @@ else
         ldflags="-s"
         msg="statically linked"
     fi
+fi
+
+if [ $Printarch -gt 0 ]; then
+    echo "$hostos-$hostcpu"
+    exit 0
 fi
 
 # This is where build outputs go
@@ -352,14 +362,14 @@ case $Tool in
             all="$@"
         fi
 
-        echo "Building $rev, $cross $msg .."
+        echo "Building $Prodver ($rev), $cross $msg .."
 
         for p in $all; do 
             if echo $p | grep -q ':' ; then
                 out=${p##*:}
                 dir=${p%%:*}
             else
-                out=$p
+                out=$(basename $p .go)
                 dir=$p
             fi
             echo "   $dir: $out .. "
