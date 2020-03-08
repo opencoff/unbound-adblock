@@ -8,6 +8,7 @@ dropboxusercontent.com
 dropbox.com
 anandtech.com
 investopedia.com
+nbcnews.com
 
 # A bunch of people use qualtrics. Why?
 qualtrics.com
