@@ -9,6 +9,11 @@ dropbox.com
 anandtech.com
 investopedia.com
 nbcnews.com
+cnbc.com
+jalopnik.com
+amzn.to
+nymag.com
+ebay.com
 
 # A bunch of people use qualtrics. Why?
 qualtrics.com
