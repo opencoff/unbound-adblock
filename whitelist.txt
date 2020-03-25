@@ -14,6 +14,8 @@ jalopnik.com
 amzn.to
 nymag.com
 ebay.com
+nypost.com
+geekwire.com
 
 # A bunch of people use qualtrics. Why?
 qualtrics.com
