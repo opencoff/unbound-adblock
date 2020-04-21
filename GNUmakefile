@@ -44,7 +44,7 @@ $(bin): ./blgen ./internal/blacklist
 .SUFFIXES: .conf .txt
 
 clean: phony
-	-rm -f bad-*
+	-rm -f bad-* $(conf)
 
 realclean: clean
 	-rm -f .????*.txt .????*.json

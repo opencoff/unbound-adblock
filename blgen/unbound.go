@@ -14,7 +14,7 @@ import (
 	"github.com/opencoff/unbound-adblock/internal/blacklist"
 )
 
-func unboundOut(b *blacklist.BL, fd io.WriteCloser) {
+func unboundOut(b *blacklist.BL, fd io.Writer) {
 	v := make([]string, 0, len(b.Hosts)+len(b.Domains))
 
 	f := func(out, in []string) []string {
@@ -39,6 +39,4 @@ server:
 
 # - EOF
 `, os.Args[0], time.Now(), len(b.Domains), len(b.Hosts), strings.Join(v, "\n"))
-
-	fd.Close()
 }

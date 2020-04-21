@@ -7,6 +7,8 @@ package main
 
 import (
 	"bufio"
+	"bytes"
+	"crypto/rand"
 	"fmt"
 	"io"
 	"os"
@@ -88,8 +90,7 @@ Options:
 
 	flag.Parse()
 
-	var output func(b *blacklist.BL, fd io.WriteCloser)
-	var outfd io.WriteCloser = os.Stdout
+	var output func(b *blacklist.BL, fd io.Writer)
 
 	switch format {
 	case "", "text", "txt":
@@ -101,18 +102,6 @@ Options:
 	default:
 		die("Unknown output format %s", format)
 	}
-
-	if len(outfile) > 0 {
-		fd, err := os.OpenFile(outfile, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0600)
-		if err != nil {
-			die("can't create %s: %s", outfile, err)
-		}
-
-		defer fd.Close()
-		outfd = fd
-	}
-
-	args := flag.Args()
 
 	bb := blacklist.NewBuilder(cachedir, nocache, Progress)
 	if len(wl.V) > 0 {
@@ -135,6 +124,7 @@ Options:
 
 	// finally, add the various blacklist files from the command
 	// line
+	args := flag.Args()
 	for _, f := range args {
 		Progress("Adding blacklist from %s ..", f)
 		err := bb.AddBlacklist(f)
@@ -148,10 +138,25 @@ Options:
 		die("%v", err)
 	}
 
-	output(bl, outfd)
+	var out bytes.Buffer
+	output(bl, &out)
+
+	if len(outfile) > 0 {
+		fd, err := newTempFile(outfile)
+		if err != nil {
+			die("can't create %s: %s", outfile, err)
+		}
+		_, err = fd.Write(out.Bytes())
+		if err != nil {
+			die("can't write %s: %s", outfile, err)
+		}
+		fd.Close()
+	} else {
+		os.Stdout.Write(out.Bytes())
+	}
 
 	if len(wlout) > 0 {
-		fd, err := os.OpenFile(wlout, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0644)
+		fd, err := newTempFile(wlout)
 		if err != nil {
 			die("can't create %s: %s", wlout, err)
 		}
@@ -163,7 +168,7 @@ Options:
 }
 
 // generate a simple text dump of domains and hosts
-func textOut(b *blacklist.BL, fd io.WriteCloser) {
+func textOut(b *blacklist.BL, fd io.Writer) {
 	fmt.Fprintf(fd, `# %d domains, %d hosts
 # -- Domains --
 %s
@@ -203,6 +208,52 @@ func addfeed(bb *blacklist.Builder, feed string) error {
 
 	}
 	return nil
+}
+
+// implements io.WriteCloser
+type tmpFile struct {
+	*os.File
+	orig string
+	tmp  string
+}
+
+func newTempFile(fn string) (*tmpFile, error) {
+	tmp := tmpName(fn)
+	fd, err := os.OpenFile(tmp, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0600)
+	if err != nil {
+		return nil, err
+	}
+
+	return &tmpFile{
+		File: fd,
+		orig: fn,
+		tmp:  tmp,
+	}, nil
+}
+
+func (t *tmpFile) Close() error {
+	err := t.File.Close()
+	if err != nil {
+		return err
+	}
+
+	return os.Rename(t.tmp, t.orig)
+}
+
+func (t *tmpFile) Abort() {
+	t.File.Close()
+	os.Remove(t.tmp)
+}
+
+func tmpName(fn string) string {
+	var b [8]byte
+
+	_, err := io.ReadFull(rand.Reader, b[:])
+	if err != nil {
+		die("can't read random bytes: %s", err)
+	}
+
+	return fmt.Sprintf("%s-%s", fn, b[:])
 }
 
 // vim: ft=go:sw=8:ts=8:noexpandtab:tw=98:
