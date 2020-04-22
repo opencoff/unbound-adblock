@@ -246,14 +246,14 @@ func (t *tmpFile) Abort() {
 }
 
 func tmpName(fn string) string {
-	var b [8]byte
+	var b [4]byte
 
 	_, err := io.ReadFull(rand.Reader, b[:])
 	if err != nil {
 		die("can't read random bytes: %s", err)
 	}
 
-	return fmt.Sprintf("%s-%s", fn, b[:])
+	return fmt.Sprintf("%s-%d.%x", fn, os.Getpid(), b[:])
 }
 
 // vim: ft=go:sw=8:ts=8:noexpandtab:tw=98:
