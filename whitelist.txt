@@ -19,6 +19,11 @@ nypost.com
 geekwire.com
 constantcontact.com
 aa.com
+downdetector.com
+ml.com
+app.link
+economist.com
+nextplatform.com
 
 # A bunch of people use qualtrics. Why?
 qualtrics.com
