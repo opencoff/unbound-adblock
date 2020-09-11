@@ -248,10 +248,15 @@ func (d *db) addFromChan(ch chan string) {
 				s = s[:len(s)-1]
 			}
 
+			tld, ok := isValidTld(s)
+			if !ok {
+				continue
+			}
+
 			if s[0] == '.' {
 				p := s[1:]
 				d.domains.Store(p, true)
-			} else if domIsTopLevel(s) {
+			} else if tld {
 				d.domains.Store(s, true)
 			} else {
 				d.hosts.Store(s, true)
@@ -317,6 +322,24 @@ func domTree(s string) []string {
 	// we reverse so the TLD is at the top
 	v = reverse(v)
 	return v[1:]
+}
+
+func isValidTld(s string) (tld bool, ok bool) {
+	if len(s) >= 255 {
+		return false, false
+	}
+	v := strings.Split(s, ".")
+	for _, x := range v {
+		if len(x) >= 63 {
+			return false, false
+		}
+	}
+
+	ok = true
+	if len(v) == 1 {
+		tld = true
+	}
+	return
 }
 
 // return true if this is a top level domain
