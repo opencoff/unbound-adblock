@@ -13,11 +13,11 @@ arch = $(shell ./build --print-arch)
 bindir = ./bin/$(arch)
 bin = $(bindir)/blgen
 
-WL = $(wildcard whitelist.txt)
-BL = $(wildcard blacklist.txt)
+WL = $(wildcard allowlist.txt)
+BL = $(wildcard blocklist.txt)
 
 ifneq ($(WL),)
-	wlopt = -W $(WL)
+	input += -W $(WL)
 endif
 
 ifneq ($(BL),)
@@ -28,16 +28,16 @@ conf = big.conf
 
 all: $(conf)
 
-bad-hosts.conf: myfeed.txt $(WL) $(BL) $(bin)
-	$(bin) -v -o $@ -f unbound -F $< $(wlopt) $(BL)
+small.conf: smallfeed.txt $(WL) $(BL) $(bin)
+	$(bin) -v -o $@ -f unbound -F $< $(input)
 
-big.conf: bigfeed.txt $(WL) whitelist.list $(BL) $(bin)
-	$(bin) -v -o $@ --output-whitelist w.txt -f unbound -F $< -W $(WL) -W whitelist.list $(BL)
+big.conf: bigfeed.txt $(WL) $(BL) $(bin)
+	$(bin) -v -o $@ --output-allowlist allowed.txt -f unbound -F $< $(input)
 
-bigfeed.txt: myfeed.txt newfeed.txt
+bigfeed.txt: smallfeed.txt newfeed.txt
 	cat $^ > $@
 
-$(bin): ./blgen ./internal/blacklist
+$(bin): ./blgen ./internal/blgen
 	./build -s
 
 .PHONY: phony

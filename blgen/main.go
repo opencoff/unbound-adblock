@@ -1,4 +1,4 @@
-// main.go -- dns blacklist host generator
+// main.go -- dns blocklist host generator
 //
 // Author: Sudhi Herle <sw@herle.net>
 // License GPLv2
@@ -16,7 +16,7 @@ import (
 	"runtime"
 	"strings"
 
-	"github.com/opencoff/unbound-adblock/internal/blacklist"
+	"github.com/opencoff/unbound-adblock/internal/blgen"
 
 	flag "github.com/opencoff/pflag"
 )
@@ -57,23 +57,23 @@ func main() {
 
 	flag.BoolVarP(&nocache, "no-cache", "", false, "Ignore the cached blocklist")
 	flag.BoolVarP(&Verbose, "verbose", "v", false, "Show verbose output")
-	flag.StringVarP(&feed, "feed", "F", "", "Read blacklists from feed file `F`")
-	flag.VarP(&wl, "whitelist", "W", "Add whistlist entries from file `F`")
+	flag.StringVarP(&feed, "feed", "F", "", "Read blocklists from feed file `F`")
+	flag.VarP(&wl, "allowlist", "W", "Add allowlist entries from file `F`")
 	flag.StringVarP(&format, "output-format", "f", "", "Set output format to `T` (text or unbound)")
 	flag.StringVarP(&outfile, "output-file", "o", "", "Write output to file `F`")
 	flag.StringVarP(&cachedir, "cache-dir", "c", ".", "Use `D` as the cache directory")
-	flag.StringVarP(&wlout, "output-whitelist", "", "", "Write whitelist output to `F`")
+	flag.StringVarP(&wlout, "output-allowlist", "", "", "Write allowlist output to `F`")
 
 	flag.Usage = func() {
-		fmt.Printf(`Usage: %s [options] [blacklist ...]
+		fmt.Printf(`Usage: %s [options] [blocklist ...]
 
-Read one or more blacklist files and generate a composite file containing
-blacklisted hosts and domains. The final output is by default written to STDOUT.
+Read one or more blocklist files and generate a composite file containing
+blocklisted hosts and domains. The final output is by default written to STDOUT.
 
 %s can optionally read a feed (txt file) of well known 3rd party malware and tracker URLs.
 The feed.txt is a simple file:
 
-- Each line starts with a URL containing blacklisted domains/hosts
+- Each line starts with a URL containing blocklisted domains/hosts
 - Optionally, the feed-type can be a second word "txt" or "json".
 - The keyword 'txt' or 'json' identifies the type of output returned by the URL
 
@@ -90,7 +90,7 @@ Options:
 
 	flag.Parse()
 
-	var output func(b *blacklist.BL, fd io.Writer)
+	var output func(b *blgen.BL, fd io.Writer)
 
 	switch format {
 	case "", "text", "txt":
@@ -103,11 +103,11 @@ Options:
 		die("Unknown output format %s", format)
 	}
 
-	bb := blacklist.NewBuilder(cachedir, nocache, Progress)
+	bb := blgen.NewBuilder(cachedir, nocache, Progress)
 	if len(wl.V) > 0 {
 		for _, f := range wl.V {
-			Progress("Adding whitelist from %s ..", f)
-			err := bb.AddWhitelist(f)
+			Progress("Adding allowlist from %s ..", f)
+			err := bb.AddAllowlist(f)
 			if err != nil {
 				die("%s", err)
 			}
@@ -122,12 +122,12 @@ Options:
 		}
 	}
 
-	// finally, add the various blacklist files from the command
+	// finally, add the various blocklist files from the command
 	// line
 	args := flag.Args()
 	for _, f := range args {
-		Progress("Adding blacklist from %s ..", f)
-		err := bb.AddBlacklist(f)
+		Progress("Adding blocklist from %s ..", f)
+		err := bb.AddBlocklist(f)
 		if err != nil {
 			die("%s", err)
 		}
@@ -160,15 +160,15 @@ Options:
 		if err != nil {
 			die("can't create %s: %s", wlout, err)
 		}
-		fmt.Fprintf(fd, "# Whitelist %d entries\n%s\n", len(bl.Whitelist),
-			strings.Join(bl.Whitelist, "\n"))
+		fmt.Fprintf(fd, "# Allowlist %d entries\n%s\n", len(bl.Allowlist),
+			strings.Join(bl.Allowlist, "\n"))
 
 		fd.Close()
 	}
 }
 
 // generate a simple text dump of domains and hosts
-func textOut(b *blacklist.BL, fd io.Writer) {
+func textOut(b *blgen.BL, fd io.Writer) {
 	fmt.Fprintf(fd, `# %d domains, %d hosts
 # -- Domains --
 %s
@@ -177,7 +177,7 @@ func textOut(b *blacklist.BL, fd io.Writer) {
 `, len(b.Domains), len(b.Hosts), strings.Join(b.Domains, "\n"), strings.Join(b.Hosts, "\n"))
 }
 
-func addfeed(bb *blacklist.Builder, feed string) error {
+func addfeed(bb *blgen.Builder, feed string) error {
 	fd, err := os.Open(feed)
 	if err != nil {
 		return err
@@ -204,7 +204,7 @@ func addfeed(bb *blacklist.Builder, feed string) error {
 			}
 		}
 
-		bb.AddBlacklistURL(v[0], json)
+		bb.AddBlocklistURL(v[0], json)
 
 	}
 	return nil

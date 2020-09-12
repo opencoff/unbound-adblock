@@ -43,3 +43,6 @@ big*.conf
 bin/*
 w.txt
 .?????*-[0-9a-f]*
+allowed.txt
+upd-all.sh
+z

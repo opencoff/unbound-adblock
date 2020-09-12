@@ -11,10 +11,10 @@ import (
 	"strings"
 	"time"
 
-	"github.com/opencoff/unbound-adblock/internal/blacklist"
+	"github.com/opencoff/unbound-adblock/internal/blgen"
 )
 
-func unboundOut(b *blacklist.BL, fd io.Writer) {
+func unboundOut(b *blgen.BL, fd io.Writer) {
 	v := make([]string, 0, len(b.Hosts)+len(b.Domains))
 
 	f := func(out, in []string) []string {

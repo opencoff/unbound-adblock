@@ -1,16 +1,16 @@
-// blacklist.go -- BL/WL domain DB abstraction
+// blocklist.go -- BL/WL domain DB abstraction
 //
 // (c) 2018 Sudhi Herle
 //
 // License: GPLv2
 
-// Blacklist faciliates the construction of a domain blacklist/whitelist
+// blgen faciliates the construction of a domain blocklist/allowlist
 // from one or more sources. Each source can be a public URL containing
 // domain names or a local file. A meta-source called "feed" can contain
 // a list of URLs; this is a convenience feature.
-// Once constructed, the blacklist DB can be queried for determining if a
-// given name is blacklisted or not.
-package blacklist
+// Once constructed, the blocklist DB can be queried for determining if a
+// given name is blocked or not.
+package blgen
 
 import (
 	"bufio"
@@ -22,15 +22,15 @@ import (
 	"sync"
 )
 
-// Abstraction for a blacklist DB builder
-// Consulting the blacklist is a two-step affair:
-//    1) Build the blacklist by feeding it various lists, feeds etc.
+// Abstraction for a blocklist DB builder
+// Consulting the blocklist is a two-step affair:
+//    1) Build the blocklist by feeding it various lists, feeds etc.
 //    2) Create a fast, read-only lookup table and use it
 type Builder struct {
 	sync.Mutex
 
-	b *db // blacklist
-	w *db // whitelist
+	b *db // blocklist
+	w *db // allowlist
 
 	verbose  func(s string, v ...interface{})
 	cachedir string
@@ -41,7 +41,7 @@ type Builder struct {
 	errs []error
 }
 
-// Make a new blacklist DB
+// Make a new blocklist DB
 func NewBuilder(cachedir string, nocache bool, prog func(s string, v ...interface{})) *Builder {
 	if len(cachedir) == 0 {
 		cachedir = "."
@@ -58,24 +58,24 @@ func NewBuilder(cachedir string, nocache bool, prog func(s string, v ...interfac
 	return d
 }
 
-// Add blacklist hosts from a URL
+// Add blocklist hosts from a URL
 // If 'isJSON' is true, then the URL is assumed to return JSON body in a
 // "standard" format; see feedparser.go:fetchURL() for details.
-func (d *Builder) AddBlacklistURL(u string, isJSON bool) error {
+func (d *Builder) AddBlocklistURL(u string, isJSON bool) error {
 	ch := make(chan string, 2)
 	go d.fetchURL(u, ch, isJSON)
 	d.b.addFromChan(ch)
 	return nil
 }
 
-// Add hosts from a file 'fn' to blacklist
-func (d *Builder) AddBlacklist(fn string) error {
-	return d.addList(d.b, fn, "blacklist")
+// Add hosts from a file 'fn' to blocklist
+func (d *Builder) AddBlocklist(fn string) error {
+	return d.addList(d.b, fn, "blocklist")
 }
 
-// Add hosts from a file 'fn' to whitelist
-func (d *Builder) AddWhitelist(fn string) error {
-	return d.addList(d.w, fn, "whitelist")
+// Add hosts from a file 'fn' to allowlist
+func (d *Builder) AddAllowlist(fn string) error {
+	return d.addList(d.w, fn, "allowlist")
 }
 
 // Finalize making the DB -- gather all hosts in a single place
@@ -98,7 +98,7 @@ func (d *Builder) Finalize() (*BL, []error) {
 
 		d.progress("Finalizing ..")
 
-		// Remove items that are in the whitelist
+		// Remove items that are in the allowlist
 		wg.Add(2)
 		go func() {
 			dom = d.w.prune(d.b.domains)
@@ -169,12 +169,12 @@ func (d *Builder) Finalize() (*BL, []error) {
 	wg.Wait()
 
 	w1 = append(w1, w2...)
-	d.progress("Total %d bad hosts; %d domains, %d hosts (%d whitelisted)\n",
+	d.progress("Total %d bad hosts; %d domains, %d hosts (%d allowed)\n",
 		len(dl)+len(hl), len(dl), len(hl), len(w1))
 	db := &BL{
 		Hosts:     hl,
 		Domains:   dl,
-		Whitelist: w1,
+		Allowlist: w1,
 	}
 	return db, nil
 }
@@ -191,12 +191,12 @@ func (d *Builder) progress(s string, v ...interface{}) {
 type BL struct {
 	Domains   []string
 	Hosts     []string
-	Whitelist []string
+	Allowlist []string
 }
 
 // -- methods on 'db' --
 
-// Representation of a whitelist or a blacklist DB
+// Representation of a allowlist or a blocklist DB
 type db struct {
 
 	// Exact domain name matches

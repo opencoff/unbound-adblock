@@ -4,7 +4,7 @@
 //
 // License: GPLv2
 
-package blacklist
+package blgen
 
 // reverse a string slice and return it.
 // This reverses in-place.

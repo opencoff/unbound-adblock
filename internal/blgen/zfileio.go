@@ -7,7 +7,7 @@
 //
 // License: GPLv2
 
-package blacklist
+package blgen
 
 import (
 	"compress/gzip"
