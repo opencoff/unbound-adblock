@@ -43,7 +43,7 @@ einthusan.in
 
 # some google search ads are actually useful for me.
 googleadservices.com
-clickserve.dartsearch.net
+dartsearch.net
 
 # these are needed to show images in certain emails
 feedsportal.com
