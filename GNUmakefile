@@ -28,11 +28,12 @@ conf = big.conf
 
 all: $(conf)
 
-small.conf: smallfeed.txt $(WL) $(BL) $(bin)
+small.conf: smallfeed.txt $(WL) $(BL) $(bin) phony
 	$(bin) -v -o $@ -f unbound -F $< $(input)
 
-big.conf: bigfeed.txt $(WL) $(BL) $(bin)
+big.conf: bigfeed.txt $(WL) $(BL) $(bin) phony
 	$(bin) -v -o $@ --output-allowlist allowed.txt -f unbound -F $< $(input)
+	$(bin) -v -o $(basename $@).txt --output-allowlist allowed.txt -f text -F $< $(input)
 
 bigfeed.txt: smallfeed.txt newfeed.txt
 	cat $^ > $@

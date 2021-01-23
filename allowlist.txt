@@ -25,11 +25,21 @@ app.link
 economist.com
 nextplatform.com
 
+# google ads
+dartsearch.net
+
+uniregistry.com
+
+spmailtechno.com
+
 # A bunch of people use qualtrics. Why?
 qualtrics.com
 
 # mandrill used by people for email verification
 mandrillapp.com
+
+# Gah. PG&E uses force.com
+force.com
 
 linuxjournal.cmail20.com
 cmail20.com
@@ -53,12 +63,13 @@ lever.co
 
 # Apple -- we want commented out entries to be blacklisted!
 #advertising.apple.com
+apple.com
 c.apple.com
 iadsdk.apple.com
-autolinkmaker.itunes.apple.com
+itunes.apple.com
 metrics.apple.com
 qwapi.apple.com
-securemetrics.apple.com
+apple.com
 
 # epsilon is used by Hilton!
 epsilon.com
@@ -76,9 +87,12 @@ hubspot.net
 
 # MSFT - Uses all kinds of domains for doing simple
 # app-store stuff.
-#edgesuite.net
+edgesuite.net
+edgekey.net
+aaplimg.com
 akadns.net
 akadns.org
+akamai.net
 akamaiedge.net
 akamaized.net
 s.gateway.messenger.live.com
