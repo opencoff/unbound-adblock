@@ -1,11 +1,6 @@
 #
 # Generate adblock hosts for unbound
 #
-# mk-adblock.py: Parse various feeds in the internet and generate a
-# 			   flat file containing bad domains and IPs
-#
-#
-#
 
 
 arch = $(shell ./build --print-arch)
@@ -32,8 +27,7 @@ small.conf: smallfeed.txt $(WL) $(BL) $(bin) phony
 	$(bin) -v -o $@ -f unbound -F $< $(input)
 
 big.conf: bigfeed.txt $(WL) $(BL) $(bin) phony
-	$(bin) -v -o $@ --output-allowlist allowed.txt -f unbound -F $< $(input)
-	$(bin) -v -o $(basename $@).txt --output-allowlist allowed.txt -f text -F $< $(input)
+	$(bin) -v --output-allowlist allowed.txt -f text -F $< $(input) | tee $(basename $@).txt | ./unbound.py > $@
 
 bigfeed.txt: smallfeed.txt newfeed.txt
 	cat $^ > $@
