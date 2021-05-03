@@ -324,6 +324,9 @@ func domTree(s string) []string {
 	return v[1:]
 }
 
+
+// Return if this a valid DNS domain and also return true if
+// this is a TLD
 func isValidTld(s string) (tld bool, ok bool) {
 	if len(s) >= 255 {
 		return false, false
@@ -335,27 +338,13 @@ func isValidTld(s string) (tld bool, ok bool) {
 		}
 	}
 
-	ok = true
-	if len(v) == 1 {
-		tld = true
-	}
-	return
-}
-
-// return true if this is a top level domain
-func domIsTopLevel(s string) bool {
-	n := 0
-	for _, c := range s {
-		if c == '.' {
-			n += 1
-			if n > 1 {
-				return false
-			}
-		}
+	if len(v) == 2 {
+		return true, true
 	}
 
-	return n == 1
+	return false, true
 }
+
 
 // Filter out improbable or bad entries in the domain lists
 func filter(s string) bool {

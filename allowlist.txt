@@ -37,6 +37,11 @@ brightcove.com
 brightcove.net
 hotjar.com
 
+# vanguard needs these for analytics! WTF
+bugsnag.com
+# This is adobe creative cloud
+omtrdc.net
+
 # irrigreen needs salesforce
 salesforce.com
 
