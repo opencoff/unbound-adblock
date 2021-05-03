@@ -32,6 +32,11 @@ uniregistry.com
 
 spmailtechno.com
 
+# for barre3 - video players
+brightcove.com
+brightcove.net
+hotjar.com
+
 # irrigreen needs salesforce
 salesforce.com
 
