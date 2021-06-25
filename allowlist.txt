@@ -34,6 +34,8 @@ spmailtechno.com
 
 # WTF why is a healthcare co in the blocklist!
 sutterhealth.org
+axis.com
+axis-communications.com
 
 # for barre3 - video players
 brightcove.com
@@ -44,6 +46,10 @@ hotjar.com
 bugsnag.com
 # This is adobe creative cloud
 omtrdc.net
+
+# bbva secure mail. WTF why is it blocked?
+securemail-bbva.com
+bbva.com
 
 # irrigreen needs salesforce
 salesforce.com
