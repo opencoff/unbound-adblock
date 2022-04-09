@@ -202,9 +202,9 @@ gstatic.com
 #google-analytics.com
 googlevideo.com
 googleapis.com
-doubleclick.net
+#doubleclick.net
 
-googletagmanager.com
+#googletagmanager.com
 
 youtube.com
 ytimg.com
@@ -1018,7 +1018,7 @@ googleapis.com
 #googleanalytics.com
 
 #Google
-googleadservices.com
+#googleadservices.com
 
 #Google.org
 google.org
@@ -1072,7 +1072,7 @@ foofle.com
 feedburner.com
 
 #DoubleClick
-doubleclick.com
+#doubleclick.com
 
 #elgooG
 com.google
@@ -1099,13 +1099,13 @@ blogger.com
 android.com
 
 #AdWords
-adwords.com
+#adwords.com
 
 #AdSense
-adsense.com
+#adsense.com
 
 #AdMob
-admob.com
+#admob.com
 
 #Google
 466453.com
@@ -2055,17 +2055,17 @@ washingtonpost.com
 s2k7tnzlhrpw.statuspage.io
 q.stripe.com
 images.dmca.com
-cdnapisec.kaltura.com
-corp.kaltura.com
-cfvod.kaltura.com
-cdn.vidible.tv
-vidible.tv
+#cdnapisec.kaltura.com
+#corp.kaltura.com
+#cfvod.kaltura.com
+#cdn.vidible.tv
+#vidible.tv
 kb.adguard.com
 hosts.herndl.org
 www.squidblacklist.org
 client-s.gateway.messenger.live.com
-filters.adtidy.org
-files.overclock.net
+#filters.adtidy.org
+#files.overclock.net
 www.trak.in
 www.theandroidsoul.com
 news.ycombinator.com
