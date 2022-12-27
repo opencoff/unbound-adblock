@@ -15,6 +15,6 @@ for ll in sys.stdin:
         print("server:")
         header = True
 
-    print(f'local-zone: "{ll}" static')
+    print(f'\tlocal-zone: "{ll}" static')
 
 

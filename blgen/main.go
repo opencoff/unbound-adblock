@@ -7,7 +7,6 @@ package main
 
 import (
 	"bufio"
-	"bytes"
 	"crypto/rand"
 	"fmt"
 	"io"
@@ -15,10 +14,11 @@ import (
 	"path"
 	"runtime"
 	"strings"
+	"sync"
 
 	"github.com/opencoff/unbound-adblock/internal/blgen"
 
-	flag "github.com/opencoff/pflag"
+	flag "github.com/spf13/pflag"
 )
 
 // basename of the program
@@ -48,19 +48,30 @@ func main() {
 	flag.SetInterspersed(true)
 
 	var feed string
-	var format string
-	var wl StringList
-	var outfile string
+	var wl []string
 	var cachedir string
 	var nocache bool
 	var wlout string
 
+	output := make(map[string]string)
+
+	outfp := map[string]func(b *blgen.BL, fd io.Writer){
+		"text":    textOut,
+		"unbound": unboundOut,
+		"txt":     textOut,
+		"unb":     unboundOut,
+	}
+
+	// default output is text
+	output["text"] = "-"
+
 	flag.BoolVarP(&nocache, "no-cache", "", false, "Ignore the cached blocklist")
 	flag.BoolVarP(&Verbose, "verbose", "v", false, "Show verbose output")
-	flag.StringVarP(&feed, "feed", "F", "", "Read blocklists from feed file `F`")
-	flag.VarP(&wl, "allowlist", "W", "Add allowlist entries from file `F`")
-	flag.StringVarP(&format, "output-format", "f", "", "Set output format to `T` (text or unbound)")
-	flag.StringVarP(&outfile, "output-file", "o", "", "Write output to file `F`")
+	flag.StringVarP(&feed, "feed", "F", "", "Read blocklist URLs from feed file `F`")
+	flag.StringSliceVarP(&wl, "allowlist", "W", []string{}, "Add allowlist entries from file `F`")
+
+	flag.StringToStringVarP(&output, "output", "o", output, "Write outputs in the given formats")
+
 	flag.StringVarP(&cachedir, "cache-dir", "c", ".", "Use `D` as the cache directory")
 	flag.StringVarP(&wlout, "output-allowlist", "", "", "Write allowlist output to `F`")
 
@@ -68,7 +79,17 @@ func main() {
 		fmt.Printf(`Usage: %s [options] [blocklist ...]
 
 Read one or more blocklist files and generate a composite file containing
-blocklisted hosts and domains. The final output is by default written to STDOUT.
+blocklisted hosts and domains.
+
+%s can generate output in multiple formats (default is text written to STDOUT).
+Output selection is via the "-o" option; multiple uses of "-o" are honored. eg:
+
+    -o text=block.text -o unbound=block.conf
+    -o unbound=block.conf,text=block.text
+
+'txt' can be used as a synonym for 'text' output format;
+similarly, 'unb' can be used as a synonym for 'unbound' output format. These are
+the only two output formats supported.
 
 %s can optionally read a feed (txt file) of well known 3rd party malware and tracker URLs.
 The feed.txt is a simple file:
@@ -90,27 +111,19 @@ Options:
 
 	flag.Parse()
 
-	var output func(b *blgen.BL, fd io.Writer)
-
-	switch format {
-	case "", "text", "txt":
-		output = textOut
-
-	case "unbound":
-		output = unboundOut
-
-	default:
-		die("Unknown output format %s", format)
+	// validate all output formats
+	for k, _ := range output {
+		if _, ok := outfp[k]; !ok {
+			die("unknown output format '%s'", k)
+		}
 	}
 
 	bb := blgen.NewBuilder(cachedir, nocache, Progress)
-	if len(wl.V) > 0 {
-		for _, f := range wl.V {
-			Progress("Adding allowlist from %s ..", f)
-			err := bb.AddAllowlist(f)
-			if err != nil {
-				die("%s", err)
-			}
+	for _, f := range wl {
+		Progress("Adding allowlist from %s ..", f)
+		err := bb.AddAllowlist(f)
+		if err != nil {
+			die("%s", err)
 		}
 	}
 
@@ -138,21 +151,33 @@ Options:
 		die("%v", err)
 	}
 
-	var out bytes.Buffer
-	output(bl, &out)
+	var wg sync.WaitGroup
 
-	if len(outfile) > 0 {
-		fd, err := newTempFile(outfile)
-		if err != nil {
-			die("can't create %s: %s", outfile, err)
+	for typ, fn := range output {
+		var fd io.Writer
+		fp := outfp[typ]
+
+		if len(fn) == 0 || fn == "-" {
+			fd = os.Stdout
+		} else {
+			fx, err := newTempFile(fn)
+			if err != nil {
+				die("can't create %s: %s", fn, err)
+			}
+
+			fd = fx
 		}
-		_, err = fd.Write(out.Bytes())
-		if err != nil {
-			die("can't write %s: %s", outfile, err)
-		}
-		fd.Close()
-	} else {
-		os.Stdout.Write(out.Bytes())
+
+		wg.Add(1)
+		go func(wg *sync.WaitGroup, fd io.Writer) {
+			defer wg.Done()
+
+			fp(bl, fd)
+
+			if fx, ok := fd.(*tmpFile); ok {
+				fx.Close()
+			}
+		}(&wg, fd)
 	}
 
 	if len(wlout) > 0 {
@@ -160,11 +185,18 @@ Options:
 		if err != nil {
 			die("can't create %s: %s", wlout, err)
 		}
-		fmt.Fprintf(fd, "# Allowlist %d entries\n%s\n", len(bl.Allowlist),
-			strings.Join(bl.Allowlist, "\n"))
 
-		fd.Close()
+		wg.Add(1)
+		go func() {
+			fmt.Fprintf(fd, "# Allowlist %d entries\n%s\n", len(bl.Allowlist),
+				strings.Join(bl.Allowlist, "\n"))
+
+			fd.Close()
+			wg.Done()
+		}()
 	}
+
+	wg.Wait()
 }
 
 // generate a simple text dump of domains and hosts

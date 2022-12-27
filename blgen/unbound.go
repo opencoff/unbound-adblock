@@ -9,24 +9,31 @@ import (
 	"io"
 	"os"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/opencoff/unbound-adblock/internal/blgen"
 )
 
 func unboundOut(b *blgen.BL, fd io.Writer) {
-	v := make([]string, 0, len(b.Hosts)+len(b.Domains))
+	var wg sync.WaitGroup
 
-	f := func(out, in []string) []string {
-		for _, v := range in {
-			z := fmt.Sprintf(`   local-zone: "%s" static`, v)
-			out = append(out, z)
+	f := func(w *strings.Builder, in []string) {
+		for _, x := range in {
+			z := fmt.Sprintf(`    local-zone: "%s" static`, x)
+			w.WriteString(z)
+			w.WriteRune('\n')
 		}
-		return out
+		wg.Done()
 	}
 
-	v = f(v, b.Domains)
-	v = f(v, b.Hosts)
+	var wd, wh strings.Builder
+
+	wg.Add(2)
+	go f(&wd, b.Domains)
+	go f(&wh, b.Hosts)
+
+	wg.Wait()
 
 	fmt.Fprintf(fd, `# Unbound config: ad domains and malware domains
 #
@@ -36,7 +43,8 @@ func unboundOut(b *blgen.BL, fd io.Writer) {
 # --- DO NOT EDIT --
 server:
 %s
-
-# - EOF
-`, os.Args[0], time.Now(), len(b.Domains), len(b.Hosts), strings.Join(v, "\n"))
+    # Hosts
+%s
+# EOF
+`, os.Args[0], time.Now(), len(b.Domains), len(b.Hosts), wd.String(), wh.String())
 }

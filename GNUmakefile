@@ -27,7 +27,7 @@ small.conf: smallfeed.txt $(WL) $(BL) $(bin) phony
 	$(bin) -v -o $@ -f unbound -F $< $(input)
 
 big.conf: bigfeed.txt $(WL) $(BL) $(bin) phony
-	$(bin) -v --output-allowlist allowed.txt -f text -F $< $(input) | tee $(basename $@).txt | ./unbound.py > $@
+	$(bin) -v --output-allowlist allowed.txt -F $< $(input) -o txt=$(basename $@).txt -o unbound=$@
 
 bigfeed.txt: smallfeed.txt newfeed.txt
 	cat $^ > $@
