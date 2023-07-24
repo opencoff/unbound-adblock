@@ -1,4 +1,4 @@
-#! /usr/bin/env python
+#! /usr/bin/env python3
 
 import os, sys
 
@@ -15,6 +15,6 @@ for ll in sys.stdin:
         print("server:")
         header = True
 
-    print(f'\tlocal-zone: "{ll}" static')
+    print(f'local-zone: "{ll}" static')
 
 
