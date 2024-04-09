@@ -1,4 +1,2 @@
-github.com/opencoff/pflag v0.5.0 h1:kK3cSTlGj0fHby/PoFzHkf+Jx3PdiACJwzYDWEWlEKQ=
-github.com/opencoff/pflag v0.5.0/go.mod h1:mTLzGGUGda1Av3d34iAJlh0JIlRxmFZtmc6qoWPspK0=
-github.com/spf13/pflag v1.0.5 h1:iy+VFUOCP1a+8yFto/drg2CJ5u0yRoB7fZw3DKv/JXA=
-github.com/spf13/pflag v1.0.5/go.mod h1:McXfInJRrz4CZXVZOBLb0bTZqETkiAhM9Iw0y3An2Bg=
+github.com/opencoff/pflag v1.0.6-sh1 h1:6RO8GgnpH928yu6earGDD01FnFT//bDJ1hCovcVVqY4=
+github.com/opencoff/pflag v1.0.6-sh1/go.mod h1:2bXtpAD/5h/2LarkbsRwiUxqnvB1nZBzn9Xjad1P41A=

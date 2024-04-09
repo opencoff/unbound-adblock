@@ -18,7 +18,7 @@ import (
 
 	"github.com/opencoff/unbound-adblock/internal/blgen"
 
-	flag "github.com/spf13/pflag"
+	flag "github.com/opencoff/pflag"
 )
 
 // basename of the program

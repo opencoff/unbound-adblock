@@ -1,8 +1,5 @@
 module github.com/opencoff/unbound-adblock
 
-go 1.17
+go 1.21
 
-require (
-	github.com/opencoff/pflag v0.5.0
-	github.com/spf13/pflag v1.0.5
-)
+require github.com/opencoff/pflag v1.0.6-sh1
