@@ -32,7 +32,7 @@ big.conf: bigfeed.txt $(WL) $(BL) $(bin) phony
 bigfeed.txt: smallfeed.txt newfeed.txt
 	cat $^ > $@
 
-$(bin): ./blgen ./internal/blgen
+$(bin): ./blgen ./internal/blgen go.mod go.sum
 	./build -s
 
 .PHONY: phony
